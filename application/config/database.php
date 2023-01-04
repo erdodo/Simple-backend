@@ -8,7 +8,7 @@
 		'hostname' => 'localhost',
 		'username' => 'root',
 		'password' => '',
-		'database' => 'test',
+		'database' => 'veritabani',
 		'dbdriver' => 'mysqli',
 		'dbprefix' => '',
 		'pconnect' => TRUE,
