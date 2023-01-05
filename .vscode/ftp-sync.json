@@ -1,0 +1,21 @@
+{
+	"remotePath": "./backend/",
+	"host": "ftp.erdoganyesil.com.tr",
+	"username": "erdogany",
+	"password": "e7.5Gq7y_=tnSd",
+	"port": 21,
+	"secure": false,
+	"protocol": "ftp",
+	"uploadOnSave": false,
+	"passive": false,
+	"debug": false,
+	"privateKeyPath": null,
+	"passphrase": null,
+	"agent": null,
+	"allow": [],
+	"ignore": ["\\.vscode", "\\.git", "\\.DS_Store"],
+	"generatedFiles": {
+		"extensionsToInclude": [""],
+		"path": ""
+	}
+}

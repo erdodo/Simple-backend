@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
--- Anamakine: 127.0.0.1
--- Üretim Zamanı: 04 Oca 2023, 22:59:33
--- Sunucu sürümü: 10.4.25-MariaDB
--- PHP Sürümü: 7.4.30
+-- Anamakine: localhost:8889
+-- Üretim Zamanı: 05 Oca 2023, 19:15:37
+-- Sunucu sürümü: 5.7.34
+-- PHP Sürümü: 7.4.21
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -32,12 +32,12 @@ CREATE TABLE `auths` (
   `name` varchar(100) COLLATE utf8_turkish_ci NOT NULL,
   `auths_type` enum('list','create','edit','delete','show') COLLATE utf8_turkish_ci DEFAULT NULL,
   `table_name` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `hide_column` varchar(255) COLLATE utf8_turkish_ci DEFAULT NULL,
+  `hide_fields` varchar(255) COLLATE utf8_turkish_ci DEFAULT NULL,
   `auths_group` int(11) DEFAULT NULL,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `own_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
@@ -46,8 +46,8 @@ CREATE TABLE `auths` (
 -- Tablo döküm verisi `auths`
 --
 
-INSERT INTO `auths` (`id`, `name`, `auths_type`, `table_name`, `hide_column`, `auths_group`, `state`, `description`, `created_at`, `updated_at`, `own_id`, `user_id`) VALUES
-(1, 'test', 'list', 'auths', NULL, 1, 1, '', '2023-01-05 00:56:20', '2023-01-05 00:56:20', 1, 1);
+INSERT INTO `auths` (`id`, `name`, `auths_type`, `table_name`, `hide_fields`, `auths_group`, `state`, `description`, `created_at`, `updated_at`, `own_id`, `user_id`) VALUES
+(1, 'test', 'list', 'auths', '[\"description\"]', 1, 1, '', '2023-01-05 00:56:20', '2023-01-05 10:48:10', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -58,11 +58,11 @@ INSERT INTO `auths` (`id`, `name`, `auths_type`, `table_name`, `hide_column`, `a
 CREATE TABLE `auths_group` (
   `id` int(11) NOT NULL,
   `name` varchar(100) COLLATE utf8_turkish_ci NOT NULL,
-  `display` text COLLATE utf8_turkish_ci DEFAULT NULL,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `display` text COLLATE utf8_turkish_ci,
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `own_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
@@ -84,11 +84,11 @@ CREATE TABLE `default_emails` (
   `id` int(11) NOT NULL,
   `name` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `title` varchar(500) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `content` text COLLATE utf8_turkish_ci DEFAULT NULL,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `content` text COLLATE utf8_turkish_ci,
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `own_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
@@ -102,25 +102,25 @@ CREATE TABLE `default_emails` (
 CREATE TABLE `fields` (
   `id` int(11) NOT NULL,
   `name` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `display` text COLLATE utf8_turkish_ci DEFAULT NULL COMMENT ' örn:{tr:"İsim",en:"Name"}',
+  `display` text COLLATE utf8_turkish_ci COMMENT ' örn:{tr:"İsim",en:"Name"}',
   `type` enum('sort_text','long_text','number','bool','file','image','phone','email','datetime','date','pass','array','json') COLLATE utf8_turkish_ci NOT NULL,
-  `enums` text COLLATE utf8_turkish_ci DEFAULT NULL,
+  `enums` text COLLATE utf8_turkish_ci,
   `min_length` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
   `max_length` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
   `min_value` double DEFAULT NULL,
   `max_value` double DEFAULT NULL,
   `relation_table` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `relation_id` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `relation_columns` text COLLATE utf8_turkish_ci DEFAULT NULL,
+  `relation_columns` text COLLATE utf8_turkish_ci,
   `mask` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `regex` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `lang_support` tinyint(1) DEFAULT 0,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `lang_support` tinyint(1) DEFAULT '0',
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `own_id` int(11) NOT NULL DEFAULT 1,
-  `user_id` int(11) NOT NULL DEFAULT 1
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `own_id` int(11) NOT NULL DEFAULT '1',
+  `user_id` int(11) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
 
 --
@@ -146,8 +146,8 @@ INSERT INTO `fields` (`id`, `name`, `display`, `type`, `enums`, `min_length`, `m
 (18, 'regex', '{\n\"tr\":\"Regex\"\n}', 'sort_text', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, '', '2023-01-04 16:06:53', '2023-01-04 22:11:43', 1, 1),
 (19, 'lang_support', '{\n\"tr\":\"Dil Desteği\"\n}', 'bool', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, '', '2023-01-04 16:08:23', '2023-01-04 22:11:41', 1, 1),
 (20, 'auths_type', '{\n\"tr\":\"Yetki Tipleri\"\n}', 'array', '[\'list\',\'show\',\'create\',\'edit\',\'delete\']', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, '', '2023-01-04 16:08:23', '2023-01-04 22:11:39', 1, 1),
-(21, 'table_name', '{\n\"tr\":\"Tablo adı\"\n}', 'sort_text', NULL, NULL, NULL, NULL, NULL, 'lists', 'id', '[\"name\",\"display\"]', NULL, NULL, 0, 1, '', '2023-01-04 16:09:54', '2023-01-04 22:11:37', 1, 1),
-(22, 'hide_fields', '{\n\"tr\":\"Gizli kolonlar\"\n}', 'array', NULL, NULL, NULL, NULL, NULL, 'fields', 'id', '[\"name\",\"display\"]', NULL, NULL, 0, 1, '', '2023-01-04 16:09:54', '2023-01-04 22:11:35', 1, 1),
+(21, 'table_name', '{\n\"tr\":\"Tablo adı\"\n}', 'sort_text', NULL, NULL, NULL, NULL, NULL, 'lists', 'name', '[\"display\",\"fields\"]', NULL, NULL, 0, 1, '', '2023-01-04 16:09:54', '2023-01-05 10:42:10', 1, 1),
+(22, 'hide_fields', '{\n\"tr\":\"Gizli kolonlar\"\n}', 'array', NULL, NULL, NULL, NULL, NULL, 'fields', 'name', '[\"display\"]', NULL, NULL, 0, 1, '', '2023-01-04 16:09:54', '2023-01-05 10:31:28', 1, 1),
 (23, 'auths_group', '{\n\"tr\":\"Yetki grubu\"\n}', 'number', NULL, NULL, NULL, NULL, NULL, 'auths_group', 'id', '[\"name\",\"display\"]', NULL, NULL, 0, 1, '', '2023-01-04 16:12:00', '2023-01-05 00:27:53', 1, 1),
 (24, 'surnam', '{\n\"tr\":\"Soyad\"\n}', 'sort_text', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, '', '2023-01-04 16:13:26', '2023-01-04 22:11:31', 1, 1),
 (25, 'email', '{\n\"tr\":\"E-posta\"\n}', 'email', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1, '', '2023-01-04 16:13:26', '2023-01-04 22:11:28', 1, 1),
@@ -190,14 +190,14 @@ INSERT INTO `fields` (`id`, `name`, `display`, `type`, `enums`, `min_length`, `m
 CREATE TABLE `lists` (
   `id` int(11) NOT NULL,
   `name` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `display` text COLLATE utf8_turkish_ci DEFAULT NULL,
-  `fields` text COLLATE utf8_turkish_ci DEFAULT NULL,
-  `before_codes` text COLLATE utf8_turkish_ci DEFAULT NULL,
-  `after_codes` text COLLATE utf8_turkish_ci DEFAULT NULL,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `display` text COLLATE utf8_turkish_ci,
+  `fields` text COLLATE utf8_turkish_ci,
+  `before_codes` text COLLATE utf8_turkish_ci,
+  `after_codes` text COLLATE utf8_turkish_ci,
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `own_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
@@ -227,10 +227,10 @@ CREATE TABLE `logs` (
   `method_name` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
   `url` varchar(500) COLLATE utf8_turkish_ci DEFAULT NULL,
   `user_ip` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `own_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
@@ -245,16 +245,16 @@ CREATE TABLE `settings` (
   `id` int(11) NOT NULL,
   `site_name` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `logo` varchar(500) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `origins` text COLLATE utf8_turkish_ci DEFAULT NULL COMMENT 'localhost,erdoganyesil.com.tr',
+  `origins` text COLLATE utf8_turkish_ci COMMENT 'localhost,erdoganyesil.com.tr',
   `smpt_email` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `smpt_name` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `smtp_password` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `smtp_host` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
   `smtp_port` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `own_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;
@@ -272,13 +272,13 @@ CREATE TABLE `users` (
   `email` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `phone` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
   `password` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `settings` text COLLATE utf8_turkish_ci DEFAULT NULL,
+  `settings` text COLLATE utf8_turkish_ci,
   `auths_group` int(11) DEFAULT NULL,
   `token` varchar(200) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `state` tinyint(1) NOT NULL DEFAULT 1,
+  `state` tinyint(1) NOT NULL DEFAULT '1',
   `description` varchar(500) COLLATE utf8_turkish_ci NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `own_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci;

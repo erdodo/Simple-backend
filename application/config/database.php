@@ -3,12 +3,13 @@
 	$active_group = 'default';
 	$query_builder = TRUE;
 
+
 	$db['default'] = array(
 		'dsn'   => '',
 		'hostname' => 'localhost',
-		'username' => 'root',
-		'password' => '',
-		'database' => 'veritabani',
+		'username' => 'erdogany_admin',
+		'password' => 'Erdogan112233.',
+		'database' => 'erdogany_veritabani',
 		'dbdriver' => 'mysqli',
 		'dbprefix' => '',
 		'pconnect' => TRUE,

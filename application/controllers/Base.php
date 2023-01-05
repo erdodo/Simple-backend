@@ -16,11 +16,52 @@ class Base extends CI_Controller
 		$this->lang = $lang;
 		//listeleme isteği
 		$this->load->model('base_model');
-		$datas = $this->base_model->list($table_name);
-		$datas = (array)$datas;
-		$fields = $this->getColumns('list', $table_name);
-		$enums = $this->getEnums($fields);
+		
+		//Sayfalama bölümü
+		$body_page = NULL;
+		$page=$body_page??1;
 
+		//Limit bölümü
+		$body_limit = NULL;
+		$limit=$body_limit??50;
+
+		//Sıralama bölümü
+		$body_sorts =NULL;// ["name"=>FALSE,"id"=>TRUE];
+		$sorts=[];
+		foreach ($body_sorts??[] as $key=> $value) {
+			$sorts[$key]=($value?"ASC":"DESC");
+		}
+		
+		//Sorgulama(like) bölümü
+		$body_like = NULL;//["name=auth"];
+		$likes=[];
+		foreach ($body_like??[] as $value) {
+			$likes[explode('=',$value)[0]]=explode('=',$value)[1];
+		}
+
+		//Filtreleme bölümü
+		$body_filters =NULL;// ["name=lists"];
+		$filters = [];
+		foreach ($body_filters??[] as $value) {
+			$filters[explode('=',$value)[0]]=explode('=',$value)[1];
+		}
+
+		//Veri çekme ayarları
+		$config=(object)[
+			"filters"=>$filters,
+			"likes"=>$likes,
+			"sorts"=>$sorts,
+			"limit"=>$limit,
+			"page"=>$page
+		];
+		$datas = $this->base_model->list($table_name,$config);
+		$datas = (array)$datas;
+
+		//Tabloya ait kolonlar
+		$fields = $this->getColumns('list', $table_name);
+		//$enums = $this->getEnums($fields);
+
+		//Kolonlara göre gösterim ayarları
 		foreach ($fields as $clm_name => $clm) {
 
 			foreach ($datas as $key => $v) {
@@ -31,7 +72,9 @@ class Base extends CI_Controller
 					$datas[$key]->$clm_name = empty($gecici[$lang]) ? $gecici['tr'] : $gecici[$lang];
 				}
 				if (!empty($clm['relation_table'])) {
-					if ($datas[$key]->$clm_name > 0) {
+					
+					if (intval($datas[$key]->$clm_name) > 0) {
+						
 						$relation_columns = json_decode($clm['relation_columns']);
 						$gecici_id = $datas[$key]->$clm_name;
 						$datas[$key]->$clm_name = [];
@@ -41,7 +84,7 @@ class Base extends CI_Controller
 							$datas[$key]->$clm_name[$rc_value] = $this->langTranslate(!empty($gecici3[$rc_value]) ? $gecici3[$rc_value] : "", $rc_value);
 						}
 					} else {
-
+						
 						if (empty($datas[$key]->$clm_name)) continue;
 
 						$degerler = json_decode($datas[$key]->$clm_name);
@@ -60,6 +103,7 @@ class Base extends CI_Controller
 								}
 							}
 						} else {
+							
 							$val = $datas[$key]->$clm_name;
 							$datas[$key]->$clm_name = [];
 							$gecici4 = (array) $this->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
@@ -68,9 +112,11 @@ class Base extends CI_Controller
 							$datas[$key]->$clm_name[$clm['relation_id']] = !empty($gecici4[$clm['relation_id']]) ? $gecici4[$clm['relation_id']] : "";
 
 							$relation_columns = json_decode($clm['relation_columns']);
+							
 							foreach ($relation_columns as $rc_key => $rc_value) {
 
 								$gecici3 = (array) $this->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+								
 								$datas[$key]->$clm_name[$rc_value] = $this->langTranslate(!empty($gecici3[$rc_value]) ? $gecici3[$rc_value] : "", $rc_value);
 							}
 						}
@@ -82,14 +128,18 @@ class Base extends CI_Controller
 				if ($clm['type'] == 'pass') {
 					$datas[$key]->$clm_name = '*********';
 				}
+				if ($clm['type'] == 'datetime') {
+					$datas[$key]->$clm_name = date_format(date_create($datas[$key]->$clm_name),"d/m/y H:i:s");
+				}
+				//TODO 'file','image','phone','email''array'
 			}
 		}
 
 
+		//Apiye response dönme
 		$response = [
 			"records" => $datas,
 			"fields" => $fields,
-
 		];
 
 		$this->output
@@ -143,7 +193,7 @@ class Base extends CI_Controller
 			$fields = [];
 			foreach ($field_list as $value) {
 				$column_data = $this->base_model->show('fields', ['name' => $value]);
-
+				
 				foreach ($column_data as $k => $v) {
 					$fields[$value][$k] = $this->langTranslate($v, $k);
 				}

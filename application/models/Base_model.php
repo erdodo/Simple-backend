@@ -11,18 +11,28 @@ class Base_model extends CI_Model
     {
         return $this->db->where($where)->get($tableName)->row();
     }
-    public function list($tableName,$where = array(), $order = "", $limit = 100, $page = 1, $like = array())
+    
+    public function list($tableName,object $config)
     {
 
+        $where = $config->filters;
+        $like = $config->likes;
+        $order = $config->sorts;
+        $limit = $config->limit;
+        $page = $config->page;
+        
         foreach ($where as $key => $value) {
             $this->db->where($key, $value);
         }
         foreach ($like as $key => $value) {
             $this->db->like($key, $value);
         }
+        foreach ($order as $key => $value) {
+            $this->db->order_by($key, $value);
+        }
+        
 
         return $this->db
-            ->order_by($order)
             ->limit($limit, $limit * ($page - 1))
             ->get($tableName)->result();
     }
