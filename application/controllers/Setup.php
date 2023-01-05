@@ -13,7 +13,7 @@ class Setup extends CI_Controller
     {
         $data = (object) $_GET;
         $db = $this->db;
-        $sql = file_get_contents(__DIR__ . '/db.sql');
+        $sql = file_get_contents(__DIR__ . '/veritabani.sql');
         $mysqli = new mysqli($db->hostname, $db->username, $db->password, $db->database);
         $mysqli->multi_query($sql);
 
