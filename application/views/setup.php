@@ -17,7 +17,7 @@
             <div class="col-12 col-md-10 col-xl-8 col-xxl-7">
                 <div class="d-flex flex-column">
                     <div>
-                        <span>*Veritabanını oluştur.</span><br>
+                        <span>*Veritabanını oluştur.123123.</span><br>
                         <span>*Veritabanı kullanıcı adı ve şifresini database.php dosyasına doldur.</span>
                         <form action="/setup/create" method="get">
 
