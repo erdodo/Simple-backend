@@ -4,20 +4,23 @@ header('Content-Type: application/json');
 class Base extends CI_Controller
 {
 	public $lang = 'tr';
-	public $user = [];
+	public $user = [];	
+	public $auths = [];	
 	
 	public function __construct()
     {
         parent::__construct();
 		$this->load->model('base_model');
-        $token = $this->input->request_headers()['Authorization'];
 		
-		$data = ($this->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
-		if(strlen($token) != 32 || empty($data)){
+        $token = $this->input->request_headers()['Authorization'] ?? NULL;
+		
+		$data = $this->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'");
+		if( empty($data) || empty($token) || strlen($token) != 32){
 			$this->output->set_status_header(401)->_display();
 			die();
 		}
-		$this->user = $data;
+		$this->auths = $this->input->auths;
+		$this->user = (array)$data;
 		
     }
 	public function index($lang)
@@ -28,7 +31,16 @@ class Base extends CI_Controller
 	public function list($lang, $table_name)
 	{
 		
+		$hide_fields=(array)json_decode($this->input->auths->hide_fields??'[]')??[];
+		$where = $this->input->auths->default_auths_id ?? NULL;
 		
+		//Default filtreler
+		foreach ($where as $k => $val) {
+			$str = strval(explode("=",$val['codes'])[1]);
+			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
+		}
+		
+
 		//Hangi dil kullanılıyor
 		$this->lang = $lang;
 		$body = (array)json_decode($this->input->raw_input_stream) ?? [];
@@ -64,7 +76,7 @@ class Base extends CI_Controller
 
 		//Filtreleme bölümü
 		$body_filters =json_decode($params["filters"]??"[]");// ["name=lists"];
-		$filters = [];
+		
 		foreach ($body_filters??[] as $value) {
 			$filters[explode('=',$value)[0]]=explode('=',$value)[1];
 		}
@@ -75,7 +87,7 @@ class Base extends CI_Controller
 			"likes"=>$likes,
 			"sorts"=>$sorts,
 			"limit"=>$limit,
-			"page"=>$page
+			"page"=>$page,
 		];
 		$datas = $this->base_model->list($table_name,$config);
 		$datas = (array)$datas;
@@ -92,9 +104,18 @@ class Base extends CI_Controller
 		$fields = $this->getColumns('list', $table_name);
 		//$enums = $this->getEnums($fields);
 
+
+		//Yetkisine göre kolon gizleme
+		foreach ($hide_fields as  $clm_name) {
+			unset($fields[$clm_name]);
+			foreach ($datas as $key => $value) {
+				unset($datas[$key]->$clm_name);
+			}
+		}
+
 		//Kolonlara göre gösterim ayarları
 		foreach ($fields as $clm_name => $clm) {
-
+			
 			foreach ($datas as $key => $v) {
 				$value = (array)$v;
 				if ($clm['lang_support'] == 1) {
@@ -319,7 +340,7 @@ class Base extends CI_Controller
 	public function create($lang, $table_name)
 	{
 		$this->lang = $lang;
-		$this->load->model('base_model');
+		
 		$fields= $this->getColumns('list', $table_name);
 		
 		
@@ -346,7 +367,7 @@ class Base extends CI_Controller
 		if(!empty($body))$params = $body;
 		if(!empty($get))$params = $get;
 
-		$this->load->model('base_model');
+		
 
 		//Hata basmalar
 		$error=[];
@@ -376,6 +397,10 @@ class Base extends CI_Controller
 		die();
 		}
 		//Ekle
+		$params['own_id']=$this->user['id'];
+		$params['user_id']=$this->user['id'];
+		$params['created_at']=date("y-m-d h:i:s");
+		$params['updated_at']=date("y-m-d h:i:s");
 		$status = $this->base_model->add($table_name,$params);
 		$response=[];
 		if($status){
@@ -401,7 +426,7 @@ class Base extends CI_Controller
 		$config=(object)[
 			'filters'=>$filters
 		];
-		$this->load->model('base_model');
+		
 		$data = ($this->base_model->show($table_name,$config));
 		$fields= $this->getColumns('list', $table_name);
 		
@@ -424,7 +449,7 @@ class Base extends CI_Controller
 		$config=(object)[
 			'filters'=>$filters
 		];
-		$this->load->model('base_model');
+		
 		$filtered_data = ($this->base_model->show($table_name,$config));
 		//GET, POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
 		
@@ -436,7 +461,7 @@ class Base extends CI_Controller
 		if(!empty($body))$params = $body;
 		if(!empty($get))$params = $get;
 		
-		$this->load->model('base_model');
+		
 
 		//Ön güncelleme
 		$updated_data=[];
@@ -471,7 +496,9 @@ class Base extends CI_Controller
 			->_display();
 		die();
 		}
-		//Ekle
+		//Düzenle
+		$updated_data['user_id']=$this->user['id'];
+		$updated_data['updated_at']=date("y-m-d h:i:s");
 		$status = $this->base_model->update($table_name,$updated_data,$config);
 		$response=[];
 		if($status){
@@ -496,12 +523,12 @@ class Base extends CI_Controller
 		$config=(object)[
 			'filters'=>$filters
 		];
-		$this->load->model('base_model');
+		
 		$filtered_data = ($this->base_model->show($table_name,$config));
 		//GET, POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
 		
 		
-		$this->load->model('base_model');
+		
 
 		//Sil
 		$status = $this->base_model->delete($table_name,$config);

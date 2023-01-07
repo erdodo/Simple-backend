@@ -1,6 +1,6 @@
 <?php
 
-class Base_model extends CI_Model
+class Auths_model extends CI_Model
 {
     public function __construct()
     {
@@ -32,14 +32,13 @@ class Base_model extends CI_Model
     public function list($tableName,object $config)
     {
 
-        $filters = $config->filters;
+        $where = $config->filters;
         $like = $config->likes;
         $order = $config->sorts;
         $limit = $config->limit;
         $page = $config->page;
         
-        
-        foreach ($filters as $key => $value) {
+        foreach ($where as $key => $value) {
             $this->db->where($key, $value);
         }
         foreach ($like as $key => $value) {
@@ -48,7 +47,6 @@ class Base_model extends CI_Model
         foreach ($order as $key => $value) {
             $this->db->order_by($key, $value);
         }
-        
         
 
         return $this->db

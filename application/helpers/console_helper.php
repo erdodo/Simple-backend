@@ -1,10 +1,9 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-function dd($data)
+function dd(...$data)
 {
-    echo "<pre>";
-    print_r($data);
-    echo "</pre>";
+    $str=json_encode($data);
+    echo $str ;
     die();
 }

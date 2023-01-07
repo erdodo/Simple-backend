@@ -15,18 +15,18 @@ $route['api/v1/(:any)'] = 'Base/index/$1';
 
 //Listeleme
 $route['api/v1/(:any)/(:any)/list'] = 'Base/list/$1/$2';//Dil,tablo adı
-$route['api/v1/(:any)/(:any)/(:any)/show'] = 'Base/show/$1/$2/$3';//Dil, tablo adı, filter
+$route['api/v1/(:any)/(:any)/show/(:any)'] = 'Base/show/$1/$2/$3';//Dil, tablo adı, filter
 
 //Ekleme
 $route['api/v1/(:any)/(:any)/add'] = 'Base/add/$1/$2';//Dil,tablo adı
 $route['api/v1/(:any)/(:any)/create'] = 'Base/create/$1/$2';//Dil,tablo adı
 
 //Güncelleme
-$route['api/v1/(:any)/(:any)/(:any)/update'] = 'Base/update/$1/$2/$3';//Dil, tablo adı, filter
-$route['api/v1/(:any)/(:any)/(:any)/edit'] = 'Base/edit/$1/$2/$3';//Dil, tablo adı, filter
+$route['api/v1/(:any)/(:any)/update/(:any)'] = 'Base/update/$1/$2/$3';//Dil, tablo adı, filter
+$route['api/v1/(:any)/(:any)/edit/(:any)'] = 'Base/edit/$1/$2/$3';//Dil, tablo adı, filter
 
 //Silme
-$route['api/v1/(:any)/(:any)/(:any)/delete'] = 'Base/delete/$1/$2/$3';//Dil, tablo adı, filter
+$route['api/v1/(:any)/(:any)/delete/(:any)'] = 'Base/delete/$1/$2/$3';//Dil, tablo adı, filter
 
 //Kullanıcı
 $route['api/account/login'] = 'Account/login';//Dil, tablo adı, filter
