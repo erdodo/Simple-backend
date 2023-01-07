@@ -4,49 +4,66 @@ header('Content-Type: application/json');
 class Base extends CI_Controller
 {
 	public $lang = 'tr';
-
-
+	public $user = [];
+	
+	public function __construct()
+    {
+        parent::__construct();
+		$this->load->model('base_model');
+        $token = $this->input->request_headers()['Authorization'];
+		
+		$data = ($this->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
+		if(strlen($token) != 32 || empty($data)){
+			$this->output->set_status_header(401)->_display();
+			die();
+		}
+		$this->user = $data;
+		
+    }
 	public function index($lang)
 	{
 		//sistem ayakta mesajı
-		echo 'Merhaba yunus asfasdfsdsdsdd';
+		echo 'Merhaba ';
 	}
 	public function list($lang, $table_name)
 	{
-		$this->load->model('base_model');
+		
 		
 		//Hangi dil kullanılıyor
 		$this->lang = $lang;
-		$input= [];
-		if(!empty($this->input->get())){
-			$input = $this->input->get();
-		}
+		$body = (array)json_decode($this->input->raw_input_stream) ?? [];
+		$post = $this->input->post() ?? [];
+		$get = $this->input->get() ?? [];
+		$params=[];
+		if(!empty($post))$params = $post;
+		if(!empty($body))$params = $body;
+		if(!empty($get))$params = $get;
 		
 		
 		//Sayfalama bölümü
-		$body_page = $input["page"] ?? NULL;
+		$body_page = $params["page"] ?? NULL;
 		$page=$body_page??1;
 
 		//Limit bölümü
-		$body_limit = $input["limit"] ?? NULL;
+		$body_limit = $params["limit"] ?? NULL;
 		$limit=$body_limit??50;
 
 		//Sıralama bölümü
-		$body_sorts = json_decode($input["sorts"]??"[]") ?? NULL;//["name=auth"];
+		$body_sorts = json_decode($params["sorts"]??"[]") ?? NULL;//["name=auth"];
 		$sorts=[];
 		foreach ($body_sorts??[] as $value) {
 			$sorts[explode('=',$value)[0]]=explode('=',$value)[1] == "true"?"ASC":"DESC";
 		}
 		
 		//Sorgulama(like) bölümü
-		$body_like = json_decode($input["like"]??"[]") ?? NULL;//["name=auth"];
+		$body_like = json_decode($params["like"]??"[]") ?? NULL;//["name=auth"];
 		$likes=[];
 		foreach ($body_like??[] as $value) {
 			$likes[explode('=',$value)[0]]=explode('=',$value)[1];
 		}
 
 		//Filtreleme bölümü
-		$body_filters =json_decode($input["filters"]??"[]");// ["name=lists"];
+		$body_filters =json_decode($params["filters"]??"[]");// ["name=lists"];
 		$filters = [];
 		foreach ($body_filters??[] as $value) {
 			$filters[explode('=',$value)[0]]=explode('=',$value)[1];
@@ -63,7 +80,7 @@ class Base extends CI_Controller
 		$datas = $this->base_model->list($table_name,$config);
 		$datas = (array)$datas;
 		$all_record_count = $this->base_model->count($table_name,$config);
-		$page_count = intval(ceil($all_record_count / $body_limit));
+		$page_count = intval(ceil($all_record_count / ($body_limit ?? 50)));
 		$table_info_config=(object)[
 			"filters"=>[
 				"name"=>$table_name
@@ -185,13 +202,137 @@ class Base extends CI_Controller
 			->_display();
 		die();
 	}
-	public function show()
+	public function show($lang, $table_name)
 	{
-		//tek veri isteği
+		$this->lang = $lang;
+		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		$config=(object)[
+			'filters'=>$filters
+		];
+		$data = ($this->base_model->show($table_name,$config));
+		$fields= $this->getColumns('list', $table_name);
+		foreach ($fields as $clm_name => $clm) {
+
+			
+				$value = (array)$data;
+				if ($clm['lang_support'] == 1) {
+					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
+					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
+					$lang_record = (array)json_decode($data->$clm_name);
+					$data->$clm_name = empty($lang_record[$lang]) ? $lang_record['tr'] : $lang_record[$lang];
+				}
+				if (!empty($clm['relation_table'])) {
+					//NOTE - Eğer kolonun bağlı oldupu bir tablo var ise bu fonksiyon çalışır.
+					if (intval($data->$clm_name) > 0) {
+						// Eğerki kayıtta id tutuluyorsa bu fonksiyon çalışır
+						$relation_columns = json_decode($clm['relation_columns']);//Hangi kolonlar isteniyor
+						$gecici_id = $data->$clm_name;//kayıt değiştirileceği için id bir değişkene atılı
+						$data->$clm_name = [];//kayıt yeniden yazılmak üzere silinir
+						foreach ($relation_columns as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+							$relation_columns_record_config=(object)[
+								"filters"=>["id" => $gecici_id]
+							];
+							$relation_columns_record = 
+								(array) $this->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+
+							//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+							$data->$clm_name['id'] = $gecici_id;
+							$data->$clm_name[$rc_value] = 
+								$this->langTranslate(!empty($relation_columns_record[$rc_value]) ? $relation_columns_record[$rc_value] : "", $rc_value);
+						}
+					} else {
+						//NOTE - Eğer ki kayıtta birden fazla id (yada ikincil anahtar olarak ne seçildiyse ) varsa bu fonksiyon tetiklenir.
+						if (empty($data->$clm_name)) continue;
+
+						//Text durumundaki array, uygun hale getirilir ve döngüye alınır.
+						$degerler = json_decode($data->$clm_name);
+						if (is_array($degerler) || is_object($degerler)) {
+							//Eğer gerçekten array ise burası çalışır
+							$data->$clm_name = [];
+							foreach ($degerler as $r_value) {
+								$relation_ids_record_config=(object)[
+									"filters"=>[$clm['relation_id'] => $r_value]
+								];
+								$relation_ids_record = (array) $this->base_model->show($clm['relation_table'], $relation_ids_record_config);
+								$data->$clm_name[$r_value][$clm['relation_id']] = 
+									!empty($relation_ids_record[$clm['relation_id']]) ? $relation_ids_record[$clm['relation_id']] : "";
+
+								$relation_columns = json_decode($clm['relation_columns']);
+								foreach ($relation_columns as $rc_key => $rc_value) {
+									$relation_columns_record_config=(object)[
+										"filters"=>[$clm['relation_id'] => $r_value]
+									];
+									$relation_columns_record = (array) $this->base_model->show($clm['relation_table'], $relation_columns_record_config);
+									$data->$clm_name[$r_value][$rc_value] = 
+										$this->langTranslate(!empty($relation_columns_record[$rc_value]) ? $relation_columns_record[$rc_value] : "", $rc_value);
+								}
+							}
+						} else {
+							//Eğer ki array değil text ise burası çalışır
+							$val = $data->$clm_name;
+							$data->$clm_name = [];
+							$gecici4 = (array) $this->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+
+
+							$data->$clm_name[$clm['relation_id']] = !empty($gecici4[$clm['relation_id']]) ? $gecici4[$clm['relation_id']] : "";
+
+							$relation_columns = json_decode($clm['relation_columns']);
+							
+							foreach ($relation_columns as $rc_key => $rc_value) {
+
+								$gecici3 = (array) $this->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+								
+								$data->$clm_name[$rc_value] = $this->langTranslate(!empty($gecici3[$rc_value]) ? $gecici3[$rc_value] : "", $rc_value);
+							}
+						}
+					}
+				}
+				if ($clm['type'] == 'bool') {
+					$data->$clm_name = $data->$clm_name == 1;
+				}
+				if ($clm['type'] == 'pass') {
+					$data->$clm_name = '*********';
+				}
+				if ($clm['type'] == 'datetime') {
+					$data->$clm_name = date_format(date_create($data->$clm_name),"d/m/y H:i:s");
+				}
+				if ($clm['type'] == 'array' ) {
+					$array_record = empty($data->$clm_name)? "[]":$data->$clm_name;
+					$data->$clm_name = json_decode($array_record) ?? $data->$clm_name;
+				}
+				//TODO 'file','image'
+			
+		}
+		
+		$response=[
+			"data"=>$data,
+			"fields"=>$fields,
+			'status'=>$data?"success":"error"
+		];
+
+		$this->output
+			->set_content_type('application/json', 'utf-8')
+			->set_output(json_encode($response))
+			->_display();
+		die();
 	}
-	public function create()
+	public function create($lang, $table_name)
 	{
-		//ekleme isteği kolonları
+		$this->lang = $lang;
+		$this->load->model('base_model');
+		$fields= $this->getColumns('list', $table_name);
+		
+		
+		$response=[
+			"fields"=>$fields,
+			'status'=>$fields?"success":"error"
+		];
+
+		$this->output
+			->set_content_type('application/json', 'utf-8')
+			->set_output(json_encode($response))
+			->_display();
+		die();
 	}
 	public function add($lang, $table_name)
 	{
@@ -255,8 +396,26 @@ class Base extends CI_Controller
 	}
 	public function edit($lang, $table_name,$filter)
 	{
-		//düzenleme isteği kolonları
+		$this->lang = $lang;
+		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		$config=(object)[
+			'filters'=>$filters
+		];
+		$this->load->model('base_model');
+		$data = ($this->base_model->show($table_name,$config));
+		$fields= $this->getColumns('list', $table_name);
 		
+		$response=[
+			"data"=>$data,
+			"fields"=>$fields,
+			'status'=>$data?"success":"error"
+		];
+
+		$this->output
+			->set_content_type('application/json', 'utf-8')
+			->set_output(json_encode($response))
+			->_display();
+		die();
 	}
 	public function update($lang, $table_name,$filter)
 	{
@@ -268,14 +427,15 @@ class Base extends CI_Controller
 		$this->load->model('base_model');
 		$filtered_data = ($this->base_model->show($table_name,$config));
 		//GET, POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
-		$body = json_decode($this->input->raw_input_stream) ?? [];
+		
+		$body = (array)json_decode($this->input->raw_input_stream) ?? [];
 		$post = $this->input->post() ?? [];
 		$get = $this->input->get() ?? [];
 		$params=[];
 		if(!empty($post))$params = $post;
 		if(!empty($body))$params = $body;
 		if(!empty($get))$params = $get;
-
+		
 		$this->load->model('base_model');
 
 		//Ön güncelleme
@@ -329,21 +489,45 @@ class Base extends CI_Controller
 			->_display();
 		die();
 	}
-	public function delete()
+	public function delete($lang, $table_name,$filter)
 	{
 		//silme isteği
+		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		$config=(object)[
+			'filters'=>$filters
+		];
+		$this->load->model('base_model');
+		$filtered_data = ($this->base_model->show($table_name,$config));
+		//GET, POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
+		
+		
+		$this->load->model('base_model');
+
+		//Sil
+		$status = $this->base_model->delete($table_name,$config);
+		$response=[];
+		
+		$response['status']=$status?"success":"error";
+
+		$this->output
+			->set_content_type('application/json', 'utf-8')
+			->set_output(json_encode($response))
+			->_display();
+		die();
 	}
 	public function langTranslate($data, $column)
 	{
 		$lang_support_config=(object)[
 			"filters"=>['name' => $column]
 		];
-		$lang_support = $this->base_model->show('fields', $lang_support_config)->lang_support == 1;
-
+		
+		$clm_data = $this->base_model->show('fields', $lang_support_config);
+		$lang_support =  empty($clm_data->lang_support) ? FALSE : $clm_data->lang_support == 1 ;
+		
 		if ($lang_support && !empty($data)) {
 			$gecici = (array)json_decode($data);
-
-			return empty($gecici[$this->lang]) ? $gecici['tr'] : $gecici[$this->lang];
+			return empty($gecici[$this->lang]) ?
+			 $gecici['tr'] : $gecici[$this->lang];
 		} else {
 			return $data;
 		}
@@ -365,9 +549,12 @@ class Base extends CI_Controller
 					"filters"=>['name' => $value]
 				];
 				$column_data = $this->base_model->show('fields', $column_data_config);
-				
-				foreach ($column_data as $k => $v) {
-					$fields[$value][$k] = $this->langTranslate($v, $k);
+				if(!empty($column_data)){
+					foreach ($column_data as $k => $v) {
+	
+						$fields[$value][$k] = $this->langTranslate($v, $k);
+					}
+
 				}
 			}
 			return $fields;

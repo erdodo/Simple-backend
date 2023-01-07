@@ -59,6 +59,7 @@ p {
 	<div id="container">
 		<h1><?php echo $heading; ?></h1>
 		<?php echo $message; ?>
+		<p>Sayfa Bulunamadı</p>
 	</div>
 </body>
 </html>
