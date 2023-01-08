@@ -223,18 +223,36 @@ class Base extends CI_Controller
 			->_display();
 		die();
 	}
-	public function show($lang, $table_name)
+	public function show($lang, $table_name,$filter)
 	{
+		$hide_fields=(array)json_decode($this->input->auths->hide_fields??'[]')??[];
+		$where = $this->input->auths->default_auths_id ?? [];
+		
+		//Default filtreler
+		$filters=[];
+		foreach ($where as $k => $val) {
+			$str = strval(explode("=",$val['codes'])[1]);
+			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
+		}
+
 		$this->lang = $lang;
-		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		$filters2 = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		$config=(object)[
-			'filters'=>$filters
+			'filters'=>array_merge($filters,$filters2)
 		];
 		$data = ($this->base_model->show($table_name,$config));
 		$fields= $this->getColumns('list', $table_name);
-		foreach ($fields as $clm_name => $clm) {
 
+		//Yetkisine göre kolon gizleme
+		foreach ($hide_fields as  $clm_name) {
+			unset($fields[$clm_name]);
+			unset($data->$clm_name);
 			
+		}
+
+		if(!empty($data)){
+			foreach ($fields as $clm_name => $clm) {
+
 				$value = (array)$data;
 				if ($clm['lang_support'] == 1) {
 					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
@@ -312,6 +330,9 @@ class Base extends CI_Controller
 					$data->$clm_name = $data->$clm_name == 1;
 				}
 				if ($clm['type'] == 'pass') {
+
+
+
 					$data->$clm_name = '*********';
 				}
 				if ($clm['type'] == 'datetime') {
@@ -323,6 +344,7 @@ class Base extends CI_Controller
 				}
 				//TODO 'file','image'
 			
+		}
 		}
 		
 		$response=[
