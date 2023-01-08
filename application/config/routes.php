@@ -30,3 +30,5 @@ $route['api/v1/(:any)/(:any)/delete/(:any)'] = 'Base/delete/$1/$2/$3';//Dil, tab
 
 //Kullanıcı
 $route['api/account/login'] = 'Account/login';//Dil, tablo adı, filter
+$route['api/account/register'] = 'Account/register';//Dil, tablo adı, filter
+$route['api/account/create_pass'] = 'Account/create_pass';//Dil, tablo adı, filter

@@ -1,7 +1,7 @@
 {
 	"remotePath": "./backend/",
 	"host": "ftp.erdoganyesil.com.tr",
-	"username": "erdogany",
+	"username": "erdo@erdoganyesil.com.tr",
 	"password": "e7.5Gq7y_=tnSd",
 	"port": 21,
 	"secure": false,

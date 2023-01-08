@@ -216,12 +216,12 @@ class Base extends CI_Controller
 			"page_count"=>$page_count,
 			"table_info"=>$table_info
 		];
-
-		$this->output
+			$this->output
 			->set_content_type('application/json', 'utf-8')
 			->set_output(json_encode($response))
 			->_display();
 		die();
+		
 	}
 	public function show($lang, $table_name,$filter)
 	{

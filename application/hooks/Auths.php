@@ -15,8 +15,9 @@ class Auths extends CI_Controller
         $user=[];$auths=[];
         
         $this->load->model("auths_model");
-
+		
         if($params['standart'] =='v1'){
+			
             $token = $this->input->request_headers()['Authorization'] ?? NULL;
             if( empty($token)  || strlen($token) != 32){
                 $this->output->set_status_header(401)
@@ -58,16 +59,16 @@ class Auths extends CI_Controller
 				->set_output(json_encode(["error"=>"auths_not_found"]))->_display();
                 die();
 			}
+			$this->input->auths = $this->detail($params['lang'],'auths',$auths['id']);
+			$this->auths_model->add('logs',[
+				"method_name"=>$params['fun'],
+				"url" => $this->uri->uri_string,
+				"user_ip"=> $_SERVER['REMOTE_ADDR'],
+				"own_id"=>1,
+				"user_id"=>1
+			]);
         }
         
-        $this->input->auths = $this->detail($params['lang'],'auths',$auths['id']);
-        $this->auths_model->add('logs',[
-            "method_name"=>$params['fun'],
-            "url" => $this->uri->uri_string,
-            "user_ip"=> $_SERVER['REMOTE_ADDR'],
-            "own_id"=>1,
-            "user_id"=>1
-        ]);
     }
     public function detail($lang, $table_name,$id)
 	{

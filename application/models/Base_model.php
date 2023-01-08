@@ -32,11 +32,11 @@ class Base_model extends CI_Model
     public function list($tableName,object $config)
     {
 
-        $filters = $config->filters;
-        $like = $config->likes;
-        $order = $config->sorts;
-        $limit = $config->limit;
-        $page = $config->page;
+        $filters = $config->filters ?? [];
+        $like = $config->likes ?? [];
+        $order = $config->sorts ?? [];
+        $limit = $config->limit ?? 50;
+        $page = $config->page ?? 1;
         
         
         foreach ($filters as $key => $value) {
@@ -77,8 +77,6 @@ class Base_model extends CI_Model
     }
     public function add($tableName,$data = array())
     {
-
-        
         return ($this->db->insert($tableName, $data));
 
         $this->db->close();

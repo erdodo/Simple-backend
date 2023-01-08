@@ -3,6 +3,25 @@ defined('BASEPATH') or exit('No direct script access allowed');
 header('Content-Type: application/json');
 class Account extends CI_Controller
 {
+    public $settings=[];
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('base_model');
+        $set_data=$this->base_model->list('settings',(object)[]);
+        $this->settings=[];
+        foreach ($set_data as $value) {
+            $this->settings[$value->set_key]=$value->set_value;
+        }
+        $def_email=$this->base_model->list('default_emails',(object)[]);
+        $this->def_email=[];
+        foreach ($def_email as $value) {
+            $this->def_email[$value->name]=[
+                "title"=>$value->title,
+                "content"=>$value->content
+            ];
+        }
+    }
     public function login()
     {
         if($this->input->method() == 'get'){
@@ -109,5 +128,69 @@ class Account extends CI_Controller
 			->set_status_header($response['status'] == 'success'?200:400)
 			->_display();
             die();
+    }
+    public function register()
+    {
+        
+        // POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
+		$body = (array)json_decode($this->input->raw_input_stream) ?? [];
+		$post = $this->input->post() ?? [];
+        $get = $this->input->get() ?? [];
+		$params=[];
+		if(!empty($post))$params = $post;
+		if(!empty($body))$params = $body;
+        if(!empty($get))$params = $get;
+
+        //TODO boş kontrolü
+
+        $generator = "1357902468";
+        $otp_code = "";
+        for ($i = 1; $i <= 6; $i++) {
+            $otp_code .= substr($generator, (rand()%(strlen($generator))), 1);
+        }
+        $params['token'] = $otp_code;
+        
+        $this->load->model('base_model');
+        $add_state =  $this->base_model->add('users',$params);
+        if($add_state){
+            $this->load->library('../controllers/Email');
+
+            $email_content = "";
+            foreach (json_decode($this->def_email['new_user_otp']['content']) as $value) {
+                $value= str_replace('%otp_code%',$otp_code,$value);
+                //STUB - Burada yapılan replace işlemini globalleştir
+                $email_content .= "$value <br/><br/><br/>";
+            }
+            $email_title = "";
+            foreach (json_decode($this->def_email['new_user_otp']['title']) as $value) {
+                $email_title .= "$value  - ";
+            }
+        
+        
+            $send = $this->email->send_email("erdoganyesil3@gmail.com",$email_title,$email_content);
+        }
+        
+
+        dd($add_state);
+        /*$this->output
+			->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($response))
+			->set_status_header($response['status'] == 'success'?200:400)
+			->_display();
+            die();*/
+    }
+    public function create_pass()
+    {
+        $this->load->model('base_model');
+        // POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
+		$body = (array)json_decode($this->input->raw_input_stream) ?? [];
+		$post = $this->input->post() ?? [];
+        $get = $this->input->get() ?? [];
+		$params=[];
+		if(!empty($post))$params = $post;
+		if(!empty($body))$params = $body;
+        if(!empty($get))$params = $get;
+
+        echo $params['token'];
     }
 }
