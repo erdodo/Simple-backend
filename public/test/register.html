@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REGİSTER</title>
+    <script src="https://code.jquery.com/jquery-3.6.3.js"
+        integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <form action="https://backend.erdoganyesil.com.tr/api/account/register" method="post">
+        <input type="text" name="name" placeholder="name">
+        <input type="text" name="surname" placeholder="surname">
+        <input type="email" name="email" placeholder="email">
+        <input type="tel" name="phone" placeholder="phone">
+        <input type="password" name="password" placeholder="password">
+        <img src="" id="captcha" alt="">
+        <input type="number" name="captcha" placeholder="captcha">
+        <button>Gönder</button>
+    </form>
+    <script>
+        var settings = {
+            "url": "https://backend.erdoganyesil.com.tr/api/account/register_columns",
+            "method": "POST",
+            "timeout": 0,
+            "headers": {
+            },
+        };
+
+        $.ajax(settings).done(function (response) {
+            console.log(response);
+            $('#captcha').attr('src', response.captcha)
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REGİSTER</title>
+    <script src="https://code.jquery.com/jquery-3.6.3.js"
+        integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+
+    <input type="text" name="name" placeholder="name">
+    <input type="file" name="file" id="">
+    <button>Gönder</button>
+
+    <script>
+        $('#gonder').click(() => {
+            var settings = {
+                "url": "https://backend.erdoganyesil.com.tr/api/v1/en/test/add",
+                "method": "PUT",
+                "timeout": 0,
+                "headers": {
+                    "Authorization": "47bf57c664273bebe3ca1becb80c34b7",
+                },
+            };
+
+            $.ajax(settings).done(function (response) {
+                console.log(response);
+            });
+        })
+    </script>
+
+</body>
+
+</html>

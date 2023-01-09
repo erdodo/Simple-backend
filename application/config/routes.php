@@ -29,6 +29,9 @@ $route['api/v1/(:any)/(:any)/edit/(:any)'] = 'Base/edit/$1/$2/$3';//Dil, tablo a
 $route['api/v1/(:any)/(:any)/delete/(:any)'] = 'Base/delete/$1/$2/$3';//Dil, tablo adı, filter
 
 //Kullanıcı
-$route['api/account/login'] = 'Account/login';//Dil, tablo adı, filter
-$route['api/account/register'] = 'Account/register';//Dil, tablo adı, filter
-$route['api/account/create_pass'] = 'Account/create_pass';//Dil, tablo adı, filter
+$route['api/account/login'] = 'Account/login';
+
+$route['api/account/register_columns'] = 'Account/register_columns';
+$route['api/account/register'] = 'Account/register';
+
+$route['api/account/profile/(:any)'] = 'Account/profile/$1';//Dil

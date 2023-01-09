@@ -7,6 +7,7 @@ class Account extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+        session_start();
         $this->load->model('base_model');
         $set_data=$this->base_model->list('settings',(object)[]);
         $this->settings=[];
@@ -21,6 +22,7 @@ class Account extends CI_Controller
                 "content"=>$value->content
             ];
         }
+        
     }
     public function login()
     {
@@ -129,6 +131,18 @@ class Account extends CI_Controller
 			->_display();
             die();
     }
+    public function register_columns()
+    {
+        $columns =  json_decode($this->settings['register_columns']);
+        $this->load->library('../libraries/Baseback.php');
+        $fields=[];
+        foreach ($columns as $value) {
+            $fields[$value] = $this->baseback->show("tr",'fields',"name:$value")['data'];
+        }
+
+        $fields['captcha'] =$this->captcha();
+        echo json_encode($fields);
+    }
     public function register()
     {
         
@@ -140,57 +154,93 @@ class Account extends CI_Controller
 		if(!empty($post))$params = $post;
 		if(!empty($body))$params = $body;
         if(!empty($get))$params = $get;
-
-        //TODO boş kontrolü
-
-        $generator = "1357902468";
-        $otp_code = "";
-        for ($i = 1; $i <= 6; $i++) {
-            $otp_code .= substr($generator, (rand()%(strlen($generator))), 1);
+        
+        if(empty($params["captcha"]) || md5($params["captcha"]) != $_SESSION['newsession']){
+            $this->output
+			->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(['error'=>"captcha_error","status"=>"error"]))
+			->set_status_header(400)
+			->_display();
+            die();
         }
-        $params['token'] = $otp_code;
+
+        $columns =  json_decode($this->settings['register_columns']);
+        $response=[
+            "error"=>["required"=>[]]
+        ];
+        foreach ($columns as  $value) {
+            if(empty($params[$value])){
+                array_push($response['error']['required'],$value);
+                $response['status']="error";
+            }
+        }
+        if($response['status']=="error"){
+            $this->output
+			->set_content_type('application/json', 'utf-8')
+			->set_output(json_encode($response))
+			->set_status_header(400)
+			->_display();
+            die();
+        }
+        unset($params['captcha']);
+        unset($response['error']);
+        
         
         $this->load->model('base_model');
-        $add_state =  $this->base_model->add('users',$params);
-        if($add_state){
-            $this->load->library('../controllers/Email');
-
-            $email_content = "";
-            foreach (json_decode($this->def_email['new_user_otp']['content']) as $value) {
-                $value= str_replace('%otp_code%',$otp_code,$value);
-                //STUB - Burada yapılan replace işlemini globalleştir
-                $email_content .= "$value <br/><br/><br/>";
-            }
-            $email_title = "";
-            foreach (json_decode($this->def_email['new_user_otp']['title']) as $value) {
-                $email_title .= "$value  - ";
-            }
-        
-        
-            $send = $this->email->send_email("erdoganyesil3@gmail.com",$email_title,$email_content);
-        }
+        $response['status'] =  $this->base_model->add('users',$params)?'success':'error';
         
 
-        dd($add_state);
-        /*$this->output
+        $this->output
 			->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($response))
 			->set_status_header($response['status'] == 'success'?200:400)
 			->_display();
-            die();*/
+            die();
     }
-    public function create_pass()
+    public function captcha()
     {
-        $this->load->model('base_model');
-        // POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
-		$body = (array)json_decode($this->input->raw_input_stream) ?? [];
-		$post = $this->input->post() ?? [];
-        $get = $this->input->get() ?? [];
-		$params=[];
-		if(!empty($post))$params = $post;
-		if(!empty($body))$params = $body;
-        if(!empty($get))$params = $get;
+        $image = @imagecreatetruecolor(120, 30) or die("hata oluştu");
 
-        echo $params['token'];
+		// arkaplan rengi oluşturuyoruz
+		$background = imagecolorallocate($image, 0xFF, 0xFF, 0xFF);
+		imagefill($image, 0, 0, $background);
+		$linecolor = imagecolorallocate($image, 0xCC, 0xCC, 0xCC);
+		$textcolor = imagecolorallocate($image, 0x33, 0x33, 0x33);
+
+		// rast gele çizgiler oluşturuyoruz
+		for ($i = 0; $i < 6; $i++) {
+			imagesetthickness($image, rand(1, 3));
+			imageline($image, 0, rand(0, 30), 120, rand(0, 30), $linecolor);
+		}
+
+
+		// rastgele sayılar oluşturuyoruz
+		$sayilar = '';
+		for ($x = 15; $x <= 95; $x += 20) {
+			$sayilar .= ($sayi = rand(0, 9));
+			imagechar($image, rand(3, 5), $x, rand(2, 14), $sayi, $textcolor);
+		}
+
+		// sayıları session aktarıyoruz
+
+		
+		/*session is started if you don't write this line can't use $_Session  global variable*/
+		$_SESSION["newsession"] = md5($sayilar);
+
+
+		// resim gösteriliyor ve sonrasında siliniyor
+		//header('Content-type: image/png');
+		ob_start();
+		imagepng($image);
+		$imagedata = ob_get_clean();
+
+        return "data:image/jpg;base64,". base64_encode($imagedata);
+
+		imagedestroy($image);
+    }
+    public function profile($lang)
+    {
+        
+        
     }
 }
