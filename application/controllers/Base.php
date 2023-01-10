@@ -11,16 +11,8 @@ class Base extends CI_Controller
     {
         parent::__construct();
 		$this->load->model('base_model');
-		
-        $token = $this->input->request_headers()['Authorization'] ?? NULL;
-		
-		$data = $this->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'");
-		if( empty($data) || empty($token) || strlen($token) != 32){
-			$this->output->set_status_header(401)->_display();
-			die();
-		}
-		$this->auths = $this->input->auths;
-		$this->user = (array)$data;
+		$this->user = (array)$this->input->user;
+		$this->auths = (array)$this->input->auths;
 		
     }
 	public function index($lang)
@@ -37,6 +29,7 @@ class Base extends CI_Controller
 		//Default filtreler
 		$filters=[];
 		foreach ($where as $k => $val) {
+
 			$str = strval(explode("=",$val['codes'])[1]);
 			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
 		}

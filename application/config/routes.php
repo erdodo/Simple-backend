@@ -10,7 +10,7 @@ $route['setup'] = 'Setup/index';
 $route['setup/create'] = 'Setup/create';
 
 //System control
-$route['api/v1/(:any)'] = 'Base/index/$1'; 
+$route['api'] = 'Account/token_control'; 
 
 
 //Listeleme
@@ -34,4 +34,6 @@ $route['api/account/login'] = 'Account/login';
 $route['api/account/register_columns'] = 'Account/register_columns';
 $route['api/account/register'] = 'Account/register';
 
-$route['api/account/profile/(:any)'] = 'Account/profile/$1';//Dil
+
+
+$route['api/admin/create_table'] = 'Admin/create_table';

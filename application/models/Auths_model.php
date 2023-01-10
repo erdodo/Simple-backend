@@ -55,9 +55,9 @@ class Auths_model extends CI_Model
     }
     public function count($tableName,object $config)
     {
-        $where = $config->filters;
-        $like = $config->likes;
-        $order = $config->sorts;
+        $where = $config->filters ?? [];
+        $like = $config->likes ?? [];
+        $order = $config->sorts ?? [];
         
         foreach ($where as $key => $value) {
             $this->db->where($key, $value);
@@ -92,5 +92,9 @@ class Auths_model extends CI_Model
     public function query($query="")
     {
         return $this->db->query($query)->row();
+    }
+    public function set_query($query="")
+    {
+        return $this->db->query($query);
     }
 }

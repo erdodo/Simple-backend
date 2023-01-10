@@ -11,13 +11,9 @@ class Auths extends CI_Controller
         $params['fun'] = $this->uri->segments[5]??NULL;
         $params['filter'] = $this->uri->segments[6]??NULL;        
 
-        
-        $user=[];$auths=[];
-        
         $this->load->model("auths_model");
 		
         if($params['standart'] =='v1'){
-			
             $token = $this->input->request_headers()['Authorization'] ?? NULL;
             if( empty($token)  || strlen($token) != 32){
                 $this->output->set_status_header(401)
@@ -25,8 +21,8 @@ class Auths extends CI_Controller
                 die();
             }
             
-            $user = ($this->auths_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
-			if(empty($user)){
+            $this->input->user = ($this->auths_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
+			if(empty($this->input->user)){
 				$this->output->set_status_header(401)
 				->set_output(json_encode(["error"=>"user_not_found"]))->_display();
                 die();
@@ -50,7 +46,7 @@ class Auths extends CI_Controller
                 "filters"=>[
                     "auths_type" => $fun,
                     "table_name"=>$params['table'],
-                    "auths_group"=>$user->auths_group
+                    "auths_group"=>$this->input->user->auths_group
                 ],
             ];
             $auths = (array) $this->auths_model->show('auths',$auths_config);
@@ -59,6 +55,7 @@ class Auths extends CI_Controller
 				->set_output(json_encode(["error"=>"auths_not_found"]))->_display();
                 die();
 			}
+			
 			$this->input->auths = $this->detail($params['lang'],'auths',$auths['id']);
 			$this->auths_model->add('logs',[
 				"method_name"=>$params['fun'],
@@ -67,6 +64,13 @@ class Auths extends CI_Controller
 				"own_id"=>1,
 				"user_id"=>1
 			]);
+
+			$user_request_count_config=(object)['filters'=>['set_key'=>"user_request_count"]];
+			$user_request_count = ($this->auths_model->show('settings',$user_request_count_config))->set_value;
+			$filter_date= date("Y-m-d H:i:s", strtotime("-1 Minutes"));
+			if($user_request_count <= $this->auths_model->set_query("SELECT * FROM `logs` WHERE `created_at` > '$filter_date' ORDER BY `id` DESC")->num_rows()){
+				dd('YAVAŞ LA KAÇ TANE ALIYON');
+			}
         }
         
     }

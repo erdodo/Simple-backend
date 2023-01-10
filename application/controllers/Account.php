@@ -238,9 +238,44 @@ class Account extends CI_Controller
 
 		imagedestroy($image);
     }
-    public function profile($lang)
+    public function token_control()
     {
+        $token = $this->input->request_headers()['Authorization'] ?? NULL;
+        if( empty($token)  || strlen($token) != 32){
+            $this->output->set_status_header(401)
+            ->set_output(json_encode(["error"=>"token_error"]))->_display();
+            die();
+        }
         
+        $this->input->user = ($this->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
+        if(empty($this->input->user)){
+            $this->output->set_status_header(401)
+            ->set_output(json_encode(["error"=>"user_not_found"]))->_display();
+            die();
+        }
+        echo json_encode(['status'=>"success"]);
         
+    }
+    public function forgot_password()
+    {
+        //Kullanıcıdan email istenecek ve o emaile otp gönderilecek
+        //captcha koyulabilir
+    }
+    public function forgot_new_password()
+    {
+        //kullanıcı otp, eposta ve yeni şifresini gönderecek
+        //session ile kullanıcı doğrulaması yapılabilie
+    }
+    public function change_email()
+    {
+        //kullanıcıya otp gönder
+    }
+    public function change_new_email()
+    {
+        //kullanıcı yeni epostası ve otp göndersin
+    }
+    public function change_password()
+    {
+        //kullanıcı eski şifresi, yeni şifresi ve kontrol şifresi göndersin
     }
 }
