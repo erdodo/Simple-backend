@@ -240,6 +240,7 @@ class Account extends CI_Controller
     }
     public function token_control()
     {
+        echo'asd';
         $token = $this->input->request_headers()['Authorization'] ?? NULL;
         if( empty($token)  || strlen($token) != 32){
             $this->output->set_status_header(401)
