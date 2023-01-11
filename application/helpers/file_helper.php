@@ -1,12 +1,10 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-    $filess="adsf";
      function upload_file($clm_name)
     {
         $CI =& get_instance();
         if ($CI->input->method()) {
-            echo empty($_FILES[$clm_name]['name']);
 			if (empty($_FILES[$clm_name]['name']) != 1) {
 				$config['upload_path'] = './public/uploads/';
 				$config['allowed_types'] = '*';

@@ -36,9 +36,15 @@ function captcha()
 		ob_start();
 		imagepng($image);
 		$imagedata = ob_get_clean();
-
-        //return "data:image/jpg;base64,". base64_encode($imagedata);
-        return $sayilar;
+		$ci = get_instance();
+		if($ci->settings['dev_mode']){
+			return $sayilar;
+		}else{
+			return "data:image/jpg;base64,". base64_encode($imagedata);
+		}
+		
+        
+        
 
 		imagedestroy($image);
     }

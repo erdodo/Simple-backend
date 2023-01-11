@@ -18,7 +18,7 @@ header('Content-Type: application/json');
 	//NOTE - Klasik listeleme isteği
 	function db_list($lang, $table_name)
 	{
-		$ci = get_instance();
+		$ci =& get_instance();
 		$ci->load->model('base_model');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
@@ -28,6 +28,7 @@ header('Content-Type: application/json');
 		
 		//Default filtreler
 		$where = $ci->auths['default_auths_id'] ?? NULL;
+		$where = empty($where)?[]:$where;
 		$filters=[];
 		foreach ($where as $k => $val) {
 
@@ -85,18 +86,8 @@ header('Content-Type: application/json');
 			"page"=>$page,
 		];
 		$datas = $ci->base_model->list($table_name,$config);
-		if(empty($datas)){
-			$response=[
-				"error"=>"data_not_found",
-				"status"=>"error"
-			];
-			$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->set_status_header(400)
-			->_display();
-		die();
-		}
+		if(empty($datas))res_error(["message"=>"data_not_found","status"=>"error"]);
+
 		$datas = (array)$datas;
 		$all_record_count = $ci->base_model->count($table_name,$config);
 		$page_count = intval(ceil($all_record_count / ($body_limit ?? 50)));
@@ -130,26 +121,10 @@ header('Content-Type: application/json');
 			"fields" => $fields,
 			"all_record_count" => $all_record_count,
 			"page_count"=>$page_count,
-			"table_info"=>$table_info
+			"table_info"=>$table_info,
+			"status"=>"success"
 		];
 			return $response;
-		
-	}
-	/*-------------------------------------------------------------------------*/
-	//NOTE - Admin için liste
-	function ad_list($table_name,$page=1)
-	{
-		$ci = get_instance();
-		$ci->load->model('base_model');
-		/*-------------------------------------*/
-		
-		$config=(object)[
-			"limit"=>500,
-			"page"=>$page,
-		];
-		$datas = $ci->base_model->list($table_name,$config);
-		
-		return $datas;
 		
 	}
 	/*-------------------------------------------------------------------------*/
@@ -176,18 +151,8 @@ header('Content-Type: application/json');
 			'filters'=>array_merge($filters,$filters2)
 		];
 		$data = ($ci->base_model->show($table_name,$config));
-		if(empty($data)){
-			$response=[
-				"error"=>"data_not_found",
-				"status"=>"error"
-			];
-			$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->set_status_header(400)
-			->_display();
-		die();
-		}
+		if(empty($data))res_error(["message"=>"data_not_found","status"=>"error"]);
+
 		$fields= get_columns( $table_name);
 
 		//Yetkisine göre kolon gizleme
@@ -207,24 +172,6 @@ header('Content-Type: application/json');
 		];
 
 		return $response;
-	}
-	/*-------------------------------------------------------------------------*/
-	//NOTE -  Admin tek veri gösterme isteği
-	function ad_show($table_name,$filter)
-	{
-		$ci = get_instance();
-		$ci->load->model('base_model');
-		$ci->user = (array)$ci->input->user;
-		$ci->auths = (array)$ci->input->auths;
-		/*-------------------------------------*/
-		
-		//Default filtreler
-		$filters2 = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
-		$config=(object)[
-			'filters'=>$filters2
-		];
-		$data = ($ci->base_model->show($table_name,$config));
-		return $data;
 	}
 	/*-------------------------------------------------------------------------*/
 	//NOTE - Listeleme isteğinde verinin daha düzenli gözükmesi için gerekli ayarlar burada yapılıe
@@ -484,11 +431,7 @@ header('Content-Type: application/json');
 			'status'=>$fields?"success":"error"
 		];
 
-		$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		return $response;
 	}
 	//NOTE - Klasik veri ekleme isteği
 	function db_add($lang, $table_name)
@@ -513,15 +456,15 @@ header('Content-Type: application/json');
 		
 		
 		//Hata basmalar
-		$error=[];
+		$required=[];
 		$error_state=FALSE;
 		//Zorunluluk kontrolleri
 		$columns = get_columns($table_name);
 		foreach ($columns as $key => $value) {
 			if($value['required'] == 1){
 				if(empty($params[$key])){
-					$error['required']=[];
-					array_push($error['required'],$key);
+					$required=[];
+					array_push($required,$key);
 					$error_state=TRUE;
 				}
 			}
@@ -543,17 +486,14 @@ header('Content-Type: application/json');
 		}
 		if($error_state){
 			$response=[
-				"error"=>$error,
+				"required"=>$required,
+				"message"=>"required_error",
 				"status"=>"error"
 			];
-			$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->set_status_header(400)
-			->_display();
+			res_error($response);
 		die();
 		}
-		if($table_name == 'lists')$params= $ci->create_table($params);
+		if($table_name == 'lists')$params= create_table($params);
 		//Ekle
 		$params['own_id']=$ci->user['id'];
 		$params['user_id']=$ci->user['id'];
@@ -570,11 +510,7 @@ header('Content-Type: application/json');
 		}
 		$response['status']=$status?"success":"error";
 
-		$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		return $response;
 		
 	}
 	function db_edit($lang, $table_name,$filter)
@@ -598,18 +534,8 @@ header('Content-Type: application/json');
 		];
 		
 		$data = ($ci->base_model->show($table_name,$config));
-		if(empty($data)){
-			$response=[
-				"error"=>"data_not_found",
-				"status"=>"error"
-			];
-			$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->set_status_header(400)
-			->_display();
-		die();
-		}
+		if(empty($data))res_error(["message"=>"data_not_found","status"=>"error"]);
+
 		$fields= get_columns( $table_name);
 		//Yetkisine göre kolon gizleme
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
@@ -646,18 +572,8 @@ header('Content-Type: application/json');
 		];
 		
 		$filtered_data = ($ci->base_model->show($table_name,$config));
-		if(empty($filtered_data)){
-			$response=[
-				"error"=>"data_not_found",
-				"status"=>"error"
-			];
-			$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->set_status_header(400)
-			->_display();
-		die();
-		}
+		if(empty($filtered_data))res_error(["message"=>"data_not_found","status"=>"error"]);
+
 		//GET, POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
 		
 		$body = (array)json_decode($ci->input->raw_input_stream) ?? [];
@@ -677,15 +593,15 @@ header('Content-Type: application/json');
 		}
 		
 		//Hata basmalar
-		$error=[];
+		$required=[];
 		$error_state=FALSE;
 		//Zorunluluk kontrolleri
 		$columns = get_columns($table_name);
 		foreach ($columns as $key => $value) {
 			if($value['required'] == 1){
 				if(empty($updated_data[$key])){
-					$error['required']=[];
-					array_push($error['required'],$key);
+					$required=[];
+					array_push($required,$key);
 					$error_state=TRUE;
 				}
 			}
@@ -706,18 +622,8 @@ header('Content-Type: application/json');
 		}
 
 
-		if($error_state){
-			$response=[
-				"error"=>$error,
-				"status"=>"error"
-			];
-			$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->set_status_header(400)
-			->_display();
-		die();
-		}
+		if($error_state)res_error(["message"=>"required_error",""=>$required,"status"=>"error"]);
+
 		//Düzenle
 		$updated_data['user_id']=$ci->user['id'];
 		$updated_data['updated_at']=date("y-m-d h:i:s");
@@ -757,18 +663,7 @@ header('Content-Type: application/json');
 		];
 		$data = ($ci->base_model->show($table_name,$config));
 
-		if(empty($data)){
-			$response=[
-				"error"=>"data_not_found",
-				"status"=>"error"
-			];
-			$ci->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->set_status_header(400)
-			->_display();
-			die();
-		}
+		if(empty($data))res_error(["message"=>"data_not_found","status"=>"error"]);
 	
 		//silme isteği
 		$config=(object)[
@@ -871,22 +766,13 @@ header('Content-Type: application/json');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
-        $ci->get_settings();
-		$ci->load->model('base_model');
+        //$ci->get_settings();
         //Gerekli sql'lerin hazırlanması
         $db_name=$ci->db->database;
         $table_name = $params['name'];
 		$table_control = $ci->base_model->phpmyadmin_query("SELECT * FROM `TABLES` WHERE `TABLE_SCHEMA` LIKE '$db_name' AND `TABLE_NAME` LIKE '$table_name'")->num_rows();
-		if($table_control >0){
-			$ci->output
-				->set_content_type('application/json', 'utf-8')
-				->set_output(json_encode([
-					"error"=>"table_found",
-					"status"=>"error"
-				]))
-				->_display();
-				die();
-		}
+		if($table_control >0) res_error(["message"=>"table_found","status"=>"error"]);
+		
         $create_table_sql ="CREATE TABLE `$db_name`.`$table_name` ( `id` INT NOT NULL AUTO_INCREMENT , PRIMARY KEY (`id`)) ENGINE = InnoDB;";
         $ci->base_model->set_query($create_table_sql);
         
@@ -974,7 +860,7 @@ header('Content-Type: application/json');
                 "name"=>$table_name."_".$value,
                 "auths_type"=>$value,
                 "table_name"=>$table_name,
-                "auths_group"=>$ci->user->auths_group,
+                "auths_group"=>$ci->user['auths_group'],
                 "state"=>1,
                 "created_at"=>date("y-m-d h:i:s"),
                 "updated_at"=>date("y-m-d h:i:s"),
@@ -982,16 +868,8 @@ header('Content-Type: application/json');
                 "user_id"=>$ci->user['id'],
             ];
             $status =  $ci->base_model->add('auths',$auths_params);
-			if(!$status){
-				$ci->output
-				->set_content_type('application/json', 'utf-8')
-				->set_output(json_encode([
-					"error"=>$table_name."_".$value."_add_error",
-					"status"=>"error"
-				]))
-				->_display();
-				die();
-			}
+			if(!$status) res_error([ "message"=>$table_name."_".$value."_add_error", "status"=>"error" ]);
+		
         }
 		return $params;
 

@@ -9,7 +9,7 @@ $route['translate_uri_dashes'] = FALSE;
 $route['setup'] = 'Setup/index';
 $route['setup/create'] = 'Setup/create';
 
-//System control
+//Sistem kontrol
 $route['api'] = 'Account/token_control'; 
 
 
@@ -37,4 +37,8 @@ $route['api/account/register'] = 'Account/register';
 //Şifremi unuttum
 $route['api/account/forgot_password'] = 'Account/forgot_password';
 $route['api/account/forgot_new_password'] = 'Account/forgot_new_password';
+
+//Eposta Değiştir
+$route['api/account/change_email'] = 'Account/change_email';
+$route['api/account/change_new_email'] = 'Account/change_new_email';
 

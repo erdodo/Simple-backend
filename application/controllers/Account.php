@@ -12,6 +12,7 @@ class Account extends CI_Controller
         $this->load->model('base_model');
         get_settings();
         get_def_emails();
+        $this->input->user=ad_show('users','id:1');
     }
     public function login()
     {
@@ -105,13 +106,8 @@ class Account extends CI_Controller
             $response['status']=$response['data']?"success":"error";
 
         }
+        $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
         
-        $this->output
-			->set_content_type('application/json', 'utf-8')
-            ->set_output(json_encode($response))
-			->set_status_header($response['status'] == 'success'?200:400)
-			->_display();
-            die();
     }
     public function register()
     {
@@ -135,46 +131,33 @@ class Account extends CI_Controller
             if(!empty($body))$params = $body;
             
             if(empty($params["captcha"]) || md5($params["captcha"]) != $_SESSION['captcha_control']){
-                $this->output
-                ->set_content_type('application/json', 'utf-8')
-                ->set_output(json_encode(['error'=>"captcha_error","status"=>"error"]))
-                ->set_status_header(400)
-                ->_display();
-                die();
+                res_error(['message'=>"captcha_error","status"=>"error"]);
             }
 
             $columns =  json_decode($this->settings['register_columns']);
             $response=[
-                "error"=>["required"=>[]]
+                "message"=>"",
+                "required"=>[]
             ];
             foreach ($columns as  $value) {
                 if(empty($params[$value])){
                     array_push($response['error']['required'],$value);
                     $response['status']="error";
+                    $response['message']="required_error";
                 }
             }
             if($response['status']=="error"){
-                $this->output
-                ->set_content_type('application/json', 'utf-8')
-                ->set_output(json_encode($response))
-                ->set_status_header(400)
-                ->_display();
-                die();
+                res_error($response);
+               
             }
             unset($params['captcha']);
-            unset($response['error']);
+            unset($response['required']);
             
             
             $this->load->model('base_model');
             $response['status'] =  $this->base_model->add('users',$params)?'success':'error';
-            
-
-            $this->output
-                ->set_content_type('application/json', 'utf-8')
-                ->set_output(json_encode($response))
-                ->set_status_header($response['status'] == 'success'?200:400)
-                ->_display();
-                die();
+            $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+           
         }
        
     }
@@ -182,16 +165,12 @@ class Account extends CI_Controller
     {
         $token = $this->input->request_headers()['Authorization'] ?? NULL;
         if( empty($token)  || strlen($token) != 32){
-            $this->output->set_status_header(401)
-            ->set_output(json_encode(["error"=>"token_error"]))->_display();
-            die();
+            res_error(["message"=>"token_error","status"=>"error"],401);
         }
         
         $this->input->user = ($this->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
         if(empty($this->input->user)){
-            $this->output->set_status_header(401)
-            ->set_output(json_encode(["error"=>"user_not_found"]))->_display();
-            die();
+            res_error(["message"=>"user_not_found","status"=>"error"],401);
         }
         echo json_encode(['status'=>"success"]);
         
@@ -215,21 +194,12 @@ class Account extends CI_Controller
             if(!empty($body))$params = $body;
 
             if(empty($params["captcha"]) || md5($params["captcha"]) != $_SESSION['captcha_control']){
-                $this->output
-                ->set_content_type('application/json', 'utf-8')
-                ->set_output(json_encode(['error'=>"captcha_error","status"=>"error"]))
-                ->set_status_header(400)
-                ->_display();
-                die();
+                res_error(["message"=>"captcha_error","status"=>"error"]);
+               
             }
             if(empty(ad_show('users','email:'.$params['email']))){
-                $this->output
-                ->set_content_type('application/json', 'utf-8')
-                ->set_output(json_encode(['error'=>"user_not_found","status"=>"error"]))
-                ->set_status_header(400)
-                ->_display();
-                die();
-            }
+                res_error(["message"=>"user_not_found","status"=>"error"]);
+                           }
             
             $email = $this->def_email['forgot_password'];
             $otp="";
@@ -248,12 +218,12 @@ class Account extends CI_Controller
             }
             $status= send_email($params['email'],$title,$content);
             $response['status']=$status?'success':$status;
-            $this->output
-            ->set_content_type('application/json', 'utf-8')
-            ->set_output(json_encode($response))
-            ->set_status_header($response['status']=='success'?200:400)
-            ->_display();
-            die();
+            
+            if($this->settings['dev_mode']){
+                $response['otp']=$otp;
+            }
+            $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+            
         }
         
     }
@@ -268,20 +238,86 @@ class Account extends CI_Controller
         if(!empty($post))$params = $post;
         if(!empty($body))$params = $body;
         if(!empty($get))$params = $get;
-
         if(empty($_SESSION['forgot_password']) || empty($params['otp'])|| $params['otp'] != $_SESSION['forgot_password']){
-            $this->output
-            ->set_content_type('application/json', 'utf-8')
-            ->set_output(json_encode(['error'=>"otp_error","status"=>"error"]))
-            ->set_status_header(400)
-            ->_display();
-            die();
+            res_error(["message"=>"otp_error","status"=>"error"]);
+            
         }
+        $response=[
+            "required"=>[],
+            "message"=>"",
+            "status"=>"success"
+        ];
+        if(empty($params['email'])){
+            array_push($response['data']['required'],'email');
+            $response['status']='error';
+            $response['message']="required_error";
+        }
+        if(empty($params['password'])){
+            array_push($response['data']['required'],'password');
+            $response['status']='error';
+            $response['message']="required_error";
+        }
+        if(empty($params['password_verification'])){
+            array_push($response['data']['required'],'password_verification');
+            $response['status']='error';
+            $response['message']="required_error";
+        }
+        if(empty($params['password_verification']) || $params['password_verification'] != $params['password']){
+            $response['message']='password_not_verified';
+            $response['status']='error';
+        }
+        if($response['status']=='error'){
+            res_error($response);
+            
+        }
+
+        $response['status'] = ad_update('users','email:'.$params['email'],['password'=>$params['password']])?"success":"error";
+        if($response['status']=='success'){
+            unset($response['required']);
+        }
+        $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
         
     }
     public function change_email()
     {
+        get_user();
         //kullanıcıya otp gönder
+        if($this->input->method()=='get'){
+            
+            $fields['email'] = ad_show('fields',"name:email");
+            echo json_encode($fields);
+            die();
+        }else{
+            $body = (array)json_decode($this->input->raw_input_stream) ?? [];
+            $post = $this->input->post() ?? [];
+            $params=[];
+            if(!empty($post))$params = $post;
+            if(!empty($body))$params = $body;
+            
+            $email = $this->def_email['change_email'];
+            $otp="";
+            $generator = "1357902468";
+            for ($i = 1; $i <= 6; $i++) {
+                $otp .= substr($generator, (rand()%(strlen($generator))), 1);
+            }
+            $_SESSION['change_email']=$otp;
+            $title="";
+            $content="";
+            foreach (json_decode($email['title']) as $value) {
+                $title .= "$value - ";
+            }
+            foreach (json_decode($email['content']) as $value) {
+                $content .= str_replace("%otp_code%",$otp,$value)." <br/><br/><hr/><br/><br/> ";
+            }
+            $status= send_email($params['email'],$title,$content);
+            $response['status']=$status?'success':$status;
+            
+            if($this->settings['dev_mode']){
+                $response['otp']=$otp;
+            }
+            $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+            
+        }
     }
     public function change_new_email()
     {

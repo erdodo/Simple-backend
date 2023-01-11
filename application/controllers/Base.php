@@ -11,6 +11,7 @@ class Base extends CI_Controller
     {
         parent::__construct();
 		$this->load->model('base_model');
+		
 		$this->user = (array)$this->input->user;
 		$this->auths = (array)$this->input->auths;
 		
@@ -24,68 +25,38 @@ class Base extends CI_Controller
 	{
 		
 		$response= db_list($lang,$table_name);
-			$this->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
-		
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 	}
 	public function show($lang, $table_name,$filter)
 	{
-		
 		$response= db_show($lang, $table_name,$filter);
-			$this->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 	}
 	public function create($lang, $table_name)
 	{
 		$response= db_create($lang, $table_name);
-			$this->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 	}
 	public function add($lang, $table_name)
 	{
 		$response= db_add($lang, $table_name);
-			$this->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 		
 	}
 	public function edit($lang, $table_name,$filter)
 	{
 		$response= db_edit($lang, $table_name,$filter);
-			$this->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 	}
 	public function update($lang, $table_name,$filter)
 	{
 		$response= db_update($lang, $table_name,$filter);
-			$this->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 	}
 	public function delete($lang, $table_name,$filter)
 	{
 		$response= db_delete($lang, $table_name,$filter);
-			$this->output
-			->set_content_type('application/json', 'utf-8')
-			->set_output(json_encode($response))
-			->_display();
-		die();
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 	}
 	
 }

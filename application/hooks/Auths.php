@@ -10,23 +10,16 @@ class Auths extends CI_Controller
         $params['table'] = $this->uri->segments[4]??NULL;
         $params['fun'] = $this->uri->segments[5]??NULL;
         $params['filter'] = $this->uri->segments[6]??NULL;        
-
+		
         $this->load->model("auths_model");
 		
         if($params['standart'] =='v1'){
             $token = $this->input->request_headers()['Authorization'] ?? NULL;
-            if( empty($token)  || strlen($token) != 32){
-                $this->output->set_status_header(401)
-				->set_output(json_encode(["error"=>"token_error"]))->_display();
-                die();
-            }
+            if( empty($token)  || strlen($token) != 32)res_error(["message"=>"token_error","status"=>"error"],401);
             
             $this->input->user = ($this->auths_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
-			if(empty($this->input->user)){
-				$this->output->set_status_header(401)
-				->set_output(json_encode(["error"=>"user_not_found"]))->_display();
-                die();
-			}
+			if(empty($this->input->user))res_error(["message"=>"user_not_found","status"=>"error"],401);
+			
 
             $fun ="";
             switch ($params['fun']) {
@@ -50,13 +43,9 @@ class Auths extends CI_Controller
                 ],
             ];
             $auths = (array) $this->auths_model->show('auths',$auths_config);
-			if(empty($auths)){
-				$this->output->set_status_header(401)
-				->set_output(json_encode(["error"=>"auths_not_found"]))->_display();
-                die();
-			}
+			if(empty($auths))res_error(["message"=>"auths_not_found","status"=>"error"],401);
 			
-			$this->input->auths = $this->detail($params['lang'],'auths',$auths['id']);
+			$this->input->auths = $this->detail("tr",'auths',$auths['id']);
 			$this->auths_model->add('logs',[
 				"method_name"=>$params['fun'],
 				"url" => $this->uri->uri_string,
