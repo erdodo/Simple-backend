@@ -1,17 +1,12 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Email 
-{
 
-    public function index()
+    function send_email($email, $title,$message)
     {
-        return 'Test email';
-    }
-    public function send_email($email, $title,$message)
-    {
-        $this->load->library('email');
-        $set_data=$this->db->get("settings")->result();
+        $ci = get_instance();
+        $ci->load->library('email');
+        $set_data=$ci->db->get("settings")->result();
         $settings=[];
         foreach ($set_data as $value) {
             $settings[$value->set_key]=$value->set_value;
@@ -30,21 +25,21 @@ class Email
         $config['mailtype'] = 'html';
 
 
-        $this->email->initialize($config);
-        $this->email->set_newline("\r\n");
+        $ci->email->initialize($config);
+        $ci->email->set_newline("\r\n");
 
-        $this->email->from($settings["smtp_user"], $settings["site_name"]);
-        $this->email->to($email);
-        //$this->email->priority(3);
+        $ci->email->from($settings["smtp_user"], $settings["site_name"]);
+        $ci->email->to($email);
+        //$ci->email->priority(3);
 
-        $this->email->subject($title);
-        $this->email->message($message);
+        $ci->email->subject($title);
+        $ci->email->message($message);
 
 
-        if ($this->email->send()) {
+        if ($ci->email->send()) {
             return true;
         } else {
-            return show_error($this->email->print_debugger());
+            return show_error($ci->email->print_debugger());
         }
     }
-}
+

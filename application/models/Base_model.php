@@ -97,4 +97,10 @@ class Base_model extends CI_Model
     {
         return $this->db->query($query);
     }
+    public function phpmyadmin_query($query)
+    {
+        $phpmyadmin = $this->load->database('phpmyadmin', TRUE); // the TRUE paramater tells CI that you'd like to return the database object.
+
+        return $phpmyadmin->query($query);
+    }
 }

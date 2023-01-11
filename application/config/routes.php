@@ -28,12 +28,13 @@ $route['api/v1/(:any)/(:any)/edit/(:any)'] = 'Base/edit/$1/$2/$3';//Dil, tablo a
 //Silme
 $route['api/v1/(:any)/(:any)/delete/(:any)'] = 'Base/delete/$1/$2/$3';//Dil, tablo adı, filter
 
-//Kullanıcı
+//Giriş
 $route['api/account/login'] = 'Account/login';
 
-$route['api/account/register_columns'] = 'Account/register_columns';
+//Üye ol
 $route['api/account/register'] = 'Account/register';
 
+//Şifremi unuttum
+$route['api/account/forgot_password'] = 'Account/forgot_password';
+$route['api/account/forgot_new_password'] = 'Account/forgot_new_password';
 
-
-$route['api/admin/create_table'] = 'Admin/create_table';

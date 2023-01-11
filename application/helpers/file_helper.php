@@ -1,14 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class File 
-{
-
-    public function upload_file($clm_name)
+    $filess="adsf";
+     function upload_file($clm_name)
     {
         $CI =& get_instance();
         if ($CI->input->method()) {
-			if ($_FILES) {
+            echo empty($_FILES[$clm_name]['name']);
+			if (empty($_FILES[$clm_name]['name']) != 1) {
 				$config['upload_path'] = './public/uploads/';
 				$config['allowed_types'] = '*';
 				$config['max_size'] = '0';
@@ -20,7 +19,7 @@ class File
                 
 				if (file_exists($config['upload_path'] . $_FILES[$clm_name]['name'])) {
 					
-					echo ('File already exists => ' . $config['upload_path'] . $_FILES[$filename]['name']);
+					echo ('File already exists => ' . $config['upload_path'] . $_FILES[$clm_name]['name']);
 					return;
 				} else {
 					if (!file_exists($config['upload_path'])) {
@@ -56,4 +55,3 @@ class File
 			}
 		}
     }
-}
