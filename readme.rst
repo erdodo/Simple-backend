@@ -1,71 +1,547 @@
-###################
-What is CodeIgniter
-###################
+api
+Merhaba kod yazmadan backend yazabilme programı Simple’a hoşgeldiniz. Tablo oluşturma, veri düzenleme, yetkilendirme, özel eposta ayarları ve çok daha fazlası. Her şey ister API ile isterseniz basit arayüz ile gerçekleştirebilirsiniz.
 
-CodeIgniter is an Application Development Framework - a toolkit - for people
-who build web sites using PHP. Its goal is to enable you to develop projects
-much faster than you could if you were writing code from scratch, by providing
-a rich set of libraries for commonly needed tasks, as well as a simple
-interface and logical structure to access these libraries. CodeIgniter lets
-you creatively focus on your project by minimizing the amount of code needed
-for a given task.
+v1
+v1 standartı altında yapılan tüm işlemler yetkilendirmeye tabidir. Örnek verecek olursak; kullanıcılar tablosundan epostası: robot@erdoganyesil.com.tr olan kullanıcıyı düzenlemek istiyorsunuz. Öncelikle token sorgusu atılır, eğer token var ise bu tokenin sahibi bulunmaya çalışılır, kullanıcı bulunduktan sonra yetki grubuna bakılır. Elimizdeki 3 veri ile yetki sorgusu atılır.
 
-*******************
-Release Information
-*******************
+İstenilen method(update)
+İstenilen tablo(users)
+İstenilen yetki grubu(1)
+Bu filtre bilgilerine uygun yetki var ise işleme devam edebilirsiniz.
 
-This repo contains in-development code for future releases. To download the
-latest stable release please visit the `CodeIgniter Downloads
-<https://codeigniter.com/download>`_ page.
+v1 standartı altında tüm veritabanı işlemleri bulunmaktadır. Bu standart dışındaki tüm apiler işleri kolaylaştırmak, hızlandırmak ve daha güvenli hale getirmek için yazılmıştır.
 
-**************************
-Changelog and New Features
-**************************
+POST
+System Control
+{{base_url}}/api/
+Kullanıcının token’i hala geçerli mi? Kontrolü yapmak için kullanılır. Yüksüz bir API’dir. Kullanıcı başı istek sınırlandırmasına takılmaz.
 
-You can find a list of all changes for each release in the `user
-guide change log <https://github.com/bcit-ci/CodeIgniter/blob/develop/user_guide_src/source/changelog.rst>`_.
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+GET
+List (Params)
+{{base_url}}/api/v1/{{lang}}/test/list?limit=17
+Tablonuzdan verileri liste halinde çekmek için bu api kullanılır. Olabildiğince fazla filtreleme seçeneği bulunmaktadır.
 
-*******************
-Server Requirements
-*******************
+Filtre örnekleri; GET, POST, FormData gibi Requestlere özel olarak dökümanlara ayrılmıştır.
 
-PHP version 5.6 or newer is recommended.
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+filters
+["name=id"]
+default = []
 
-It should work on 5.3.7 as well, but we strongly advise you NOT to run
-such old versions of PHP, because of potential security and performance
-issues, as well as missing features.
+page
+1
+default = 1
 
-************
-Installation
-************
+sorts
+["id=false"]
+default = []
 
-Please see the `installation section <https://codeigniter.com/userguide3/installation/index.html>`_
-of the CodeIgniter User Guide.
+like
+["name=auths"]
+limit
+17
+Example
+Request
+Dart - http
+var request = http.Request('POST', Uri.parse('{{base_url}}/api/v1/{{lang}}/users/list?filters=["name=id"]&page=1&limit=10&sorts=["id=false"]&like=["name=auths"]'));
 
-*******
-License
-*******
 
-Please see the `license
-agreement <https://github.com/bcit-ci/CodeIgniter/blob/develop/user_guide_src/source/license.rst>`_.
+http.StreamedResponse response = await request.send();
 
-*********
-Resources
-*********
+if (response.statusCode == 200) {
+  print(await response.stream.bytesToString());
+}
+else {
+  print(response.reasonPhrase);
+}
+Response
+json
+{
+    "records": [],
+    "fields": {
+        "id": {
+            "id": "1",
+            "name": "id",
+            "display": "ID",
+            "type": "number",
+            "enums": null,
+            "required": "0",
+            "min_length": "1",
+            "max_length": "11",
+            "min_value": null,
+            "max_value": null,
+            "relation_table": null,
+            "relation_id": null,
+            "relation_columns": null,
+            "mask": null,
+            "regex": null,
+            "lang_support": "0",
+            "state": "1",
+            "description": "",
+            "created_at": "2023-01-04 15:55:15",
+            "updated_at": "2023-01-04 22:02:08",
+            "own_id": "1",
+            "user_id": "1"
+        },
+        "name": {
+            "id": "2",
+            "name": "name",
+            "display": "Name",
+            "type": "sort_text",
+            "enums": null,
+            "required": "0",
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "relation_table": null,
+            "relation_id": null,
+            "relation_columns": null,
+            "mask": null,
+            "regex": null,
+            "lang_support": "0",
+            "state": "1",
+            "description": "",
+            "created_at": "2023-01-04 15:56:35",
+            "updated_at": "2023-01-04 22:12:27",
+            "own_id": "1",
+            "user_id": "1"
+        },
+        "surname": {
+            "id": "24",
+            "name": "surname",
+            "display": "Soyad",
+            "type": "sort_text",
+            "enums": null,
+            "required": "0",
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "relation_table": null,
+            "relation_id": null,
+            "relation_columns": null,
+            "mask": null,
+            "regex": null,
+            "lang_support": "0",
+            "state": "1",
+            "description": "",
+            "created_at": "2023-01-04 16:13:26",
+            "updated_at": "2023-01-06 22:04:37",
+            "own_id": "1",
+            "user_id": "1"
+        },
+        "email": {
+            "id": "25",
+            "name": "email",
+            "display": "E-posta",
+            "type": "email",
+            "enums": null,
+            "required": "1",
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "relation_table": null,
+            "relation_id": null,
+            "relation_columns": null,
+            "mask": null,
+            "regex": null,
+            "lang_support": "0",
+            "state": "1",
+            "description": "",
+            "created_at": "2023-01-04 16:13:26",
+            "updated_at": "2023-01-06 22:59:46",
+            "own_id": "1",
+            "user_id": "1"
+        },
+        "password": {
+            "id": "27",
+            "name": "password",
+            "display": "Şifre",
+            "type": "pass",
+            "enums": null,
+            "required": "1",
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "relation_table": null,
+            "relation_id": null,
+            "relation_columns": null,
+            "mask": null,
+            "regex": null,
+            "lang_support": "0",
+            "state": "1",
+            "description": "",
+            "created_at": "2023-01-04 16:13:58",
+            "updated_at": "2023-01-06 22:59:39",
+            "own_id": "1",
+            "user_id": "1"
+        },
+        "phone": {
+            "id": "26",
+            "name": "phone",
+            "display": "Telefon",
+            "type": "phone",
+            "enums": null,
+            "required": "0",
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "relation_table": null,
+            "relation_id": null,
+            "relation_columns": null,
+            "mask": null,
+            "regex": null,
+            "lang_support": "0",
+            "state": "1",
+            "description": "",
+            "created_at": "2023-01-04 16:13:58",
+            "updated_at": "2023-01-04 22:11:26",
+            "own_id": "1",
+            "user_id": "1"
+        },
+        "settings": {
+            "id": "28",
+            "name": "settings",
+            "display": "Ayarlar",
+            "type": "json",
+            "enums": null,
+            "required": "0",
+            "min_length": null,
+            "max_length": null,
+            "min_value": null,
+            "max_value": null,
+            "relation_table": null,
+            "relation_id": null,
+            "relation_columns": null,
+            "mask": null,
+            "regex": null,
+            "lang_support": "0",
+            "state": "1",
+            "description": "",
+            "cre
+POST
+List Data
+{{base_url}}/api/v1/{{lang}}/lists/list
+Add request description…
+POST
+Show Data
+{{base_url}}/api/v1/{{lang}}/users/show/id:1
+Tablonuzdan tek veri çekmek için kullanabileceğiniz bu API içinde ilgili data ve kolonlarını barındırmaktadır.
 
--  `User Guide <https://codeigniter.com/docs>`_
--  `Contributing Guide <https://github.com/bcit-ci/CodeIgniter/blob/develop/contributing.md>`_
--  `Language File Translations <https://github.com/bcit-ci/codeigniter3-translations>`_
--  `Community Forums <http://forum.codeigniter.com/>`_
--  `Community Wiki <https://github.com/bcit-ci/CodeIgniter/wiki>`_
--  `Community Slack Channel <https://codeigniterchat.slack.com>`_
+Verinizi 2 farklı şekilde filtreleyebilirsiniz:
 
-Report security issues to our `Security Panel <mailto:security@codeigniter.com>`_
-or via our `page on HackerOne <https://hackerone.com/codeigniter>`_, thank you.
+İd kullanımı
+Eğer ki show/ ‘dan sonra bir numara gönderirseniz bu sistem tarafından id olarak tanımlanır ve ona uygun response döner.
 
-***************
-Acknowledgement
-***************
+2. Filtre kullanımı
 
-The CodeIgniter team would like to thank EllisLab, all the
-contributors to the CodeIgniter project and you, the CodeIgniter user.
+Filtre kullanımından kasıt istenilen veride unique bir kolonun key:value şeklinde request atılmadır. Örnek verecek olursak ; show/email:robot@erdoganyesil.com.tr . Kullanıcılar tablosunda eposta unique bir değişken olduğu için sadece tek bir veri bulunabilir ve response olarak döner.
+
+örn:
+
+name:Test7
+id:1
+phone:05555555555
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+name
+TEST6
+surname
+TEST7SUR
+Bodyraw (json)
+json
+{
+  "name": "test6"
+}
+GET
+Create Columns Data
+{{base_url}}/api/v1/{{lang}}/lists/create
+Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa "column:deger" şeklinde kullanılabilir
+
+örn:
+
+name:Test7
+id:1
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+name
+TEST6
+surname
+TEST7SUR
+Bodyraw (json)
+json
+{
+  "name": "test6"
+}
+POST
+Add data
+{{base_url}}/api/v1/{{lang}}/test/add
+Create request’inde aldığımız kolonları add API’sine göndererek veritabanına ekleme işlemi yapabiliriz. Eğer ki ekleme yaparken yetkisi olmayan kolonlara ekleme yapılmaya çalışırsa o kolonlar silinir ve eklenmez.
+
+Image eklemesi yapılırken dosya boyutlandırması yapılır ve 4 farklı kolon JSON olarak kaydı gerçekleşir. Bu kolonlar full ve mini olarak iki ayrı boyutlandırma ve bunlara ek başına sisteminizin çalıştığı domain adresi eklenmiş hali olan link kolonlarıdır.
+
+File eklemesi yaparken image ile aynı mantıkta çalışır sadece mini kolonu boş gelir.
+
+Tablo eklemesi yaparken(lists) fields tablosunda var olan kolonları eklemelisiniz. Kolonların yetersiz kaldığı durumlarda öncelikle kolonları eklemeli ve tablo eklemeye geri dönmelisiniz. Orada seçtiğiniz durumlara özel sql kodu üretilmekte ve çalıştırılmaktadır. Eklediğiniz tablo sistem tarafından ana yöneticiye tam yetki verir. Siz ilgili yetki gruplarınıza özel eklebilirsiniz.
+
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+email
+asdf
+password
+123123
+surname
+Test 9 sur
+name
+Test 9
+Bodyform-data
+name
+image_test
+file
+/C:/Users/erdo_/OneDrive/Masaüstü/indir.jpg
+asdfasdf
+asdfasd
+GET
+Edit Columns Data
+{{base_url}}/api/v1/{{lang}}/users/edit/id:1
+Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa "column:deger" şeklinde kullanılabilir
+
+örn:
+
+name:Test7
+id:1
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+name
+TEST6
+surname
+TEST7SUR
+Bodyraw (json)
+json
+{
+  "name": "test6"
+}
+POST
+Update Data
+{{base_url}}/api/v1/{{lang}}/test/update/1
+Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa "column:deger" şeklinde kullanılabilir
+
+örn:
+
+name:Test7
+id:1
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+name
+TEST6
+surname
+TEST7SUR
+Bodyraw (json)
+json
+{
+  "name": "test2"
+}
+DEL
+Delete Data
+{{base_url}}/api/v1/{{lang}}/test/delete/id:3
+Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa "column:deger" şeklinde kullanılabilir
+
+örn:
+
+name:Test7
+id:1
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+name
+TEST6
+surname
+TEST7SUR
+Bodyraw (json)
+json
+{
+  "name": "test6"
+}
+account
+Add folder description…
+Forgot password
+Columns apisinden kolon bilgileri ve captcha gelmektedir.
+
+Send email apisinde captcha ve eposta bilgisi gönderilir.
+
+Kullanıcıya eposta yoluyla bir otp kodu gönderilir.
+
+New password apisinde OTP, kullanıcının epostası, yeni şifresi ve yeni şifre doğrulaması istenir.
+
+kontroller backendde yapılır ve mesaj döndürülür.
+
+GET
+Columns
+{{base_url}}/api/account/forgot_password
+Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.
+
+Captcha kodu base64 olarak döner.
+
+POST
+Send Email
+{{base_url}}/api/account/forgot_password
+Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.
+
+Captcha kodu base64 olarak döner.
+
+Query Params
+email
+erdoganyesil3@gmail.com
+otp
+85863
+Bodyraw (json)
+json
+{
+  "email": "robot2@erdoganyesil.com.tr",
+  "captcha": "08354"
+}
+POST
+New password
+{{base_url}}/api/account/forgot_new_password?otp=805815&email=robot2@erdoganyesil.com.tr&password=456&password_verification=456
+Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.
+
+Captcha kodu base64 olarak döner.
+
+Query Params
+otp
+805815
+email
+robot2@erdoganyesil.com.tr
+password
+456
+password_verification
+456
+Change email
+Columns apisinde gerekli kolonlar döndürülür.
+
+Send email apisinde kullanıcının yeni epostasına OTP maili gider.
+
+New email apisinde yeni email ve OTP gönderilir ve değişmiş olur
+
+GET
+Columns
+{{base_url}}/api/account/change_email
+Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.
+
+Captcha kodu base64 olarak döner.
+
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+POST
+Send Email
+{{base_url}}/api/account/change_email?email=erdoganyesil3@gmail.com
+Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.
+
+Captcha kodu base64 olarak döner.
+
+Request Headers
+Authorization
+47bf57c664273bebe3ca1becb80c34b7
+Query Params
+email
+erdoganyesil3@gmail.com
+otp
+85863
+Bodyraw (json)
+json
+{
+  "email": "robot2@erdoganyesil.com.tr",
+  "captcha": "08354"
+}
+POST
+New email
+{{base_url}}/api/account/change_new_email
+Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.
+
+Captcha kodu base64 olarak döner.
+
+Query Params
+otp
+805815
+email
+robot2@erdoganyesil.com.tr
+password
+456
+password_verification
+456
+POST
+Login
+{{base_url}}/api/account/login
+GET isteği dışındaki tüm istekleri destekler.
+
+Güvenlik önlemlerinden dolayı get isteği kapatılmıştır.
+
+Query Params
+email
+asdf@asd.asd
+password
+asdf
+Bodyraw (json)
+json
+{
+  "email": "robot@erdoganyesil.com.tr",
+  "password": "RobotKullanıcı"
+}
+Example
+Login (Get methodu)
+Request
+Dart - http
+var request = http.Request('GET', Uri.parse('{{base_url}}/api/account/login?email=asdf@asd.asd&password=asdf'));
+ 
+ 
+http.StreamedResponse response = await request.send();
+ 
+if (response.statusCode == 200) {
+  print(await response.stream.bytesToString());
+}
+else {
+  print(response.reasonPhrase);
+}
+View more
+Response
+json
+ 
+POST
+Register
+{{base_url}}/api/account/register?name=Erdoğan&surname=Yeşil&email=erdoganyesil3@gmail.com
+Add request description…
+Query Params
+name
+Erdoğan
+surname
+Yeşil
+email
+erdoganyesil3@gmail.com
+GET
+Register Columns
+{{base_url}}/api/account/register
+Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.
+
+Captcha kodu base64 olarak döner.
