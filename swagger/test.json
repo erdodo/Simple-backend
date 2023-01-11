@@ -1,0 +1,2001 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "api",
+		"description": "Merhaba kod yazmadan backend yazabilme programı Simple’a hoşgeldiniz. Tablo oluşturma, veri düzenleme, yetkilendirme, özel eposta ayarları ve çok daha fazlası. Her şey ister API ile isterseniz basit arayüz ile gerçekleştirebilirsiniz.",
+		"version": "1.0.0"
+	},
+	"servers": [
+		{
+			"url": "http://{{base_url}}"
+		}
+	],
+	"components": {
+		"securitySchemes": {
+			"noauthAuth": {
+				"type": "http",
+				"scheme": "noauth"
+			}
+		}
+	},
+	"tags": [
+		{
+			"name": "v1",
+			"description": "v1 standartı altında yapılan tüm işlemler yetkilendirmeye tabidir. Örnek verecek olursak; kullanıcılar tablosundan epostası: robot@erdoganyesil.com.tr olan kullanıcıyı düzenlemek istiyorsunuz. Öncelikle token sorgusu atılır, eğer token var ise bu tokenin sahibi bulunmaya çalışılır, kullanıcı bulunduktan sonra yetki grubuna bakılır. Elimizdeki 3 veri ile yetki sorgusu atılır.\n\n1. İstenilen method(update)\n2. İstenilen tablo(users)\n3. İstenilen yetki grubu(1)\n    \n\n  \nBu filtre bilgilerine uygun yetki var ise işleme devam edebilirsiniz.\n\nv1 standartı altında tüm veritabanı işlemleri bulunmaktadır. Bu standart dışındaki tüm apiler işleri kolaylaştırmak, hızlandırmak ve daha güvenli hale getirmek için yazılmıştır."
+		},
+		{
+			"name": "account"
+		},
+		{
+			"name": "account > Forgot password",
+			"description": "Columns apisinden kolon bilgileri ve captcha gelmektedir.\n\n---\n\nSend email apisinde captcha ve eposta bilgisi gönderilir.\n\nKullanıcıya eposta yoluyla bir otp kodu gönderilir.\n\n---\n\nNew password apisinde OTP, kullanıcının epostası, yeni şifresi ve yeni şifre doğrulaması istenir.\n\nkontroller backendde yapılır ve mesaj döndürülür."
+		},
+		{
+			"name": "account > Change email",
+			"description": "Columns apisinde gerekli kolonlar döndürülür.\n\n---\n\nSend email apisinde kullanıcının yeni epostasına OTP maili gider.\n\n---\n\nNew email apisinde yeni email ve OTP gönderilir ve değişmiş olur"
+		}
+	],
+	"paths": {
+		"/api/": {
+			"post": {
+				"tags": ["v1"],
+				"summary": "System Control",
+				"description": "Kullanıcının token’i hala geçerli mi? Kontrolü yapmak için kullanılır. Yüksüz bir API’dir. Kullanıcı başı istek sınırlandırmasına takılmaz.",
+				"requestBody": {
+					"content": {}
+				},
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/test/list": {
+			"get": {
+				"tags": ["v1"],
+				"summary": "List (Params)",
+				"description": "Tablonuzdan verileri liste halinde çekmek için bu api kullanılır. Olabildiğince fazla filtreleme seçeneği bulunmaktadır.\n\nFiltre örnekleri; GET, POST, FormData gibi Requestlere özel olarak dökümanlara ayrılmıştır.",
+				"security": [
+					{
+						"noauthAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "limit",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"example": "17"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"headers": {
+							"Connection": {
+								"schema": {
+									"type": "string",
+									"example": "Keep-Alive"
+								}
+							},
+							"X-Powered-By": {
+								"schema": {
+									"type": "string",
+									"example": "PHP/8.1.12"
+								}
+							},
+							"Content-Type": {
+								"schema": {
+									"type": "string",
+									"example": "application/json; charset=utf-8"
+								}
+							},
+							"Content-Length": {
+								"schema": {
+									"type": "integer",
+									"example": "937"
+								}
+							},
+							"Content-Encoding": {
+								"schema": {
+									"type": "string",
+									"example": "br"
+								}
+							},
+							"Vary": {
+								"schema": {
+									"type": "string",
+									"example": "Accept-Encoding"
+								}
+							},
+							"Date": {
+								"schema": {
+									"type": "string",
+									"example": "Sat, 07 Jan 2023 17:13:55 GMT"
+								}
+							},
+							"Server": {
+								"schema": {
+									"type": "string",
+									"example": "LiteSpeed"
+								}
+							},
+							"Alt-Svc": {
+								"schema": {
+									"type": "string",
+									"example": "quic=\":443\"; ma=2592000; v=\"43,46\", h3-Q043=\":443\"; ma=2592000, h3-Q046=\":443\"; ma=2592000, h3-Q050=\":443\"; ma=2592000, h3-25=\":443\"; ma=2592000, h3-27=\":443\"; ma=2592000"
+								}
+							}
+						},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"examples": {
+									"example-0": {
+										"summary": "List (Query Params)",
+										"value": {
+											"records": [],
+											"fields": {
+												"id": {
+													"id": "1",
+													"name": "id",
+													"display": "ID",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": "1",
+													"max_length": "11",
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 15:55:15",
+													"updated_at": "2023-01-04 22:02:08",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"name": {
+													"id": "2",
+													"name": "name",
+													"display": "Name",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 15:56:35",
+													"updated_at": "2023-01-04 22:12:27",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"surname": {
+													"id": "24",
+													"name": "surname",
+													"display": "Soyad",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:26",
+													"updated_at": "2023-01-06 22:04:37",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"email": {
+													"id": "25",
+													"name": "email",
+													"display": "E-posta",
+													"type": "email",
+													"enums": null,
+													"required": "1",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:26",
+													"updated_at": "2023-01-06 22:59:46",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"password": {
+													"id": "27",
+													"name": "password",
+													"display": "Şifre",
+													"type": "pass",
+													"enums": null,
+													"required": "1",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:58",
+													"updated_at": "2023-01-06 22:59:39",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"phone": {
+													"id": "26",
+													"name": "phone",
+													"display": "Telefon",
+													"type": "phone",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:58",
+													"updated_at": "2023-01-04 22:11:26",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"settings": {
+													"id": "28",
+													"name": "settings",
+													"display": "Ayarlar",
+													"type": "json",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:14:39",
+													"updated_at": "2023-01-04 22:11:22",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"auths_group": {
+													"id": "23",
+													"name": "auths_group",
+													"display": "Yetki grubu",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "auths_group",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"display\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:12:00",
+													"updated_at": "2023-01-05 00:27:53",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"token": {
+													"id": "29",
+													"name": "token",
+													"display": "Token",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:14:39",
+													"updated_at": "2023-01-04 22:11:17",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"state": {
+													"id": "50",
+													"name": "state",
+													"display": "Durum",
+													"type": "bool",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:27:12",
+													"updated_at": "2023-01-04 22:09:01",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"description": {
+													"id": "51",
+													"name": "description",
+													"display": "Açıklama",
+													"type": "long_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:27:51",
+													"updated_at": "2023-01-04 22:08:59",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"created_at": {
+													"id": "52",
+													"name": "created_at",
+													"display": "Eklenme Zamanı",
+													"type": "datetime",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:28:22",
+													"updated_at": "2023-01-04 22:08:55",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"updated_at": {
+													"id": "53",
+													"name": "updated_at",
+													"display": "Güncellenme Zamanı",
+													"type": "datetime",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:28:50",
+													"updated_at": "2023-01-04 22:08:52",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"own_id": {
+													"id": "43",
+													"name": "own_id",
+													"display": "Kayıt Sahibi",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "users",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"surname\",\"email\",\"phone\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 20:35:24",
+													"updated_at": "2023-01-06 09:54:57",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"user_id": {
+													"id": "49",
+													"name": "user_id",
+													"display": "Kaydı Güncelleyen",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "users",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"surname\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 20:35:24",
+													"updated_at": "2023-01-04 22:09:04",
+													"own_id": "1",
+													"user_id": "1"
+												}
+											},
+											"all_record_count": 0,
+											"page_count": 0,
+											"table_info": {
+												"id": "7",
+												"name": "users",
+												"display": "{\"tr\":\"Kullanıcılar\"}",
+												"fields": "[\"id\",\"name\",\"surname\",\"email\",\"password\",\"phone\",\"settings\",\"auths_group\",\"token\",\"state\",\"description\",\"created_at\",\"updated_at\",\"own_id\",\"user_id\"]",
+												"before_codes": null,
+												"after_codes": null,
+												"state": "1",
+												"description": "",
+												"created_at": "2023-01-04 16:30:44",
+												"updated_at": "2023-01-04 23:29:05",
+												"own_id": "1",
+												"user_id": "1"
+											}
+										}
+									},
+									"example-1": {
+										"summary": "List (Form Data Params)",
+										"value": {
+											"records": [
+												{
+													"id": "1",
+													"name": "Robot 1",
+													"surname": "Kullanıcı",
+													"email": "robot@erdoganyesil.com.tr",
+													"phone": "+90(000) 000 00 00",
+													"password": "*********",
+													"settings": null,
+													"auths_group": {
+														"id": "1",
+														"name": "test",
+														"display": "Test Auths"
+													},
+													"token": null,
+													"state": true,
+													"description": "",
+													"created_at": "04/01/23 20:31:30",
+													"updated_at": "06/01/23 00:55:26",
+													"own_id": {
+														"id": "1",
+														"name": "Robot 1",
+														"surname": "Kullanıcı",
+														"email": "robot@erdoganyesil.com.tr",
+														"phone": "+90(000) 000 00 00"
+													},
+													"user_id": {
+														"id": "1",
+														"name": "Robot 1",
+														"surname": "Kullanıcı"
+													}
+												}
+											],
+											"fields": {
+												"id": {
+													"id": "1",
+													"name": "id",
+													"display": "ID",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": "1",
+													"max_length": "11",
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 15:55:15",
+													"updated_at": "2023-01-04 22:02:08",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"name": {
+													"id": "2",
+													"name": "name",
+													"display": "Name",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 15:56:35",
+													"updated_at": "2023-01-04 22:12:27",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"surname": {
+													"id": "24",
+													"name": "surname",
+													"display": "Soyad",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:26",
+													"updated_at": "2023-01-06 22:04:37",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"email": {
+													"id": "25",
+													"name": "email",
+													"display": "E-posta",
+													"type": "email",
+													"enums": null,
+													"required": "1",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:26",
+													"updated_at": "2023-01-06 22:59:46",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"password": {
+													"id": "27",
+													"name": "password",
+													"display": "Şifre",
+													"type": "pass",
+													"enums": null,
+													"required": "1",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:58",
+													"updated_at": "2023-01-06 22:59:39",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"phone": {
+													"id": "26",
+													"name": "phone",
+													"display": "Telefon",
+													"type": "phone",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:58",
+													"updated_at": "2023-01-04 22:11:26",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"settings": {
+													"id": "28",
+													"name": "settings",
+													"display": "Ayarlar",
+													"type": "json",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:14:39",
+													"updated_at": "2023-01-04 22:11:22",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"auths_group": {
+													"id": "23",
+													"name": "auths_group",
+													"display": "Yetki grubu",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "auths_group",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"display\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:12:00",
+													"updated_at": "2023-01-05 00:27:53",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"token": {
+													"id": "29",
+													"name": "token",
+													"display": "Token",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:14:39",
+													"updated_at": "2023-01-04 22:11:17",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"state": {
+													"id": "50",
+													"name": "state",
+													"display": "Durum",
+													"type": "bool",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:27:12",
+													"updated_at": "2023-01-04 22:09:01",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"description": {
+													"id": "51",
+													"name": "description",
+													"display": "Açıklama",
+													"type": "long_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:27:51",
+													"updated_at": "2023-01-04 22:08:59",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"created_at": {
+													"id": "52",
+													"name": "created_at",
+													"display": "Eklenme Zamanı",
+													"type": "datetime",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:28:22",
+													"updated_at": "2023-01-04 22:08:55",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"updated_at": {
+													"id": "53",
+													"name": "updated_at",
+													"display": "Güncellenme Zamanı",
+													"type": "datetime",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:28:50",
+													"updated_at": "2023-01-04 22:08:52",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"own_id": {
+													"id": "43",
+													"name": "own_id",
+													"display": "Kayıt Sahibi",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "users",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"surname\",\"email\",\"phone\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 20:35:24",
+													"updated_at": "2023-01-06 09:54:57",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"user_id": {
+													"id": "49",
+													"name": "user_id",
+													"display": "Kaydı Güncelleyen",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "users",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"surname\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 20:35:24",
+													"updated_at": "2023-01-04 22:09:04",
+													"own_id": "1",
+													"user_id": "1"
+												}
+											},
+											"all_record_count": 8,
+											"page_count": 8,
+											"table_info": {
+												"id": "7",
+												"name": "users",
+												"display": "{\"tr\":\"Kullanıcılar\"}",
+												"fields": "[\"id\",\"name\",\"surname\",\"email\",\"password\",\"phone\",\"settings\",\"auths_group\",\"token\",\"state\",\"description\",\"created_at\",\"updated_at\",\"own_id\",\"user_id\"]",
+												"before_codes": null,
+												"after_codes": null,
+												"state": "1",
+												"description": "",
+												"created_at": "2023-01-04 16:30:44",
+												"updated_at": "2023-01-04 23:29:05",
+												"own_id": "1",
+												"user_id": "1"
+											}
+										}
+									},
+									"example-2": {
+										"summary": "List (Body Params)",
+										"value": {
+											"records": [
+												{
+													"id": "1",
+													"name": "Robot 1",
+													"surname": "Kullanıcı",
+													"email": "robot@erdoganyesil.com.tr",
+													"phone": "+90(000) 000 00 00",
+													"password": "*********",
+													"settings": null,
+													"auths_group": {
+														"id": "1",
+														"name": "test",
+														"display": "Test Auths"
+													},
+													"token": null,
+													"state": true,
+													"description": "",
+													"created_at": "04/01/23 20:31:30",
+													"updated_at": "06/01/23 00:55:26",
+													"own_id": {
+														"id": "1",
+														"name": "Robot 1",
+														"surname": "Kullanıcı",
+														"email": "robot@erdoganyesil.com.tr",
+														"phone": "+90(000) 000 00 00"
+													},
+													"user_id": {
+														"id": "1",
+														"name": "Robot 1",
+														"surname": "Kullanıcı"
+													}
+												}
+											],
+											"fields": {
+												"id": {
+													"id": "1",
+													"name": "id",
+													"display": "ID",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": "1",
+													"max_length": "11",
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 15:55:15",
+													"updated_at": "2023-01-04 22:02:08",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"name": {
+													"id": "2",
+													"name": "name",
+													"display": "Name",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 15:56:35",
+													"updated_at": "2023-01-04 22:12:27",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"surname": {
+													"id": "24",
+													"name": "surname",
+													"display": "Soyad",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:26",
+													"updated_at": "2023-01-06 22:04:37",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"email": {
+													"id": "25",
+													"name": "email",
+													"display": "E-posta",
+													"type": "email",
+													"enums": null,
+													"required": "1",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:26",
+													"updated_at": "2023-01-06 22:59:46",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"password": {
+													"id": "27",
+													"name": "password",
+													"display": "Şifre",
+													"type": "pass",
+													"enums": null,
+													"required": "1",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:58",
+													"updated_at": "2023-01-06 22:59:39",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"phone": {
+													"id": "26",
+													"name": "phone",
+													"display": "Telefon",
+													"type": "phone",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:13:58",
+													"updated_at": "2023-01-04 22:11:26",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"settings": {
+													"id": "28",
+													"name": "settings",
+													"display": "Ayarlar",
+													"type": "json",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:14:39",
+													"updated_at": "2023-01-04 22:11:22",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"auths_group": {
+													"id": "23",
+													"name": "auths_group",
+													"display": "Yetki grubu",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "auths_group",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"display\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:12:00",
+													"updated_at": "2023-01-05 00:27:53",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"token": {
+													"id": "29",
+													"name": "token",
+													"display": "Token",
+													"type": "sort_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 16:14:39",
+													"updated_at": "2023-01-04 22:11:17",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"state": {
+													"id": "50",
+													"name": "state",
+													"display": "Durum",
+													"type": "bool",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:27:12",
+													"updated_at": "2023-01-04 22:09:01",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"description": {
+													"id": "51",
+													"name": "description",
+													"display": "Açıklama",
+													"type": "long_text",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:27:51",
+													"updated_at": "2023-01-04 22:08:59",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"created_at": {
+													"id": "52",
+													"name": "created_at",
+													"display": "Eklenme Zamanı",
+													"type": "datetime",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:28:22",
+													"updated_at": "2023-01-04 22:08:55",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"updated_at": {
+													"id": "53",
+													"name": "updated_at",
+													"display": "Güncellenme Zamanı",
+													"type": "datetime",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": null,
+													"relation_id": null,
+													"relation_columns": null,
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 21:28:50",
+													"updated_at": "2023-01-04 22:08:52",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"own_id": {
+													"id": "43",
+													"name": "own_id",
+													"display": "Kayıt Sahibi",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "users",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"surname\",\"email\",\"phone\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 20:35:24",
+													"updated_at": "2023-01-06 09:54:57",
+													"own_id": "1",
+													"user_id": "1"
+												},
+												"user_id": {
+													"id": "49",
+													"name": "user_id",
+													"display": "Kaydı Güncelleyen",
+													"type": "number",
+													"enums": null,
+													"required": "0",
+													"min_length": null,
+													"max_length": null,
+													"min_value": null,
+													"max_value": null,
+													"relation_table": "users",
+													"relation_id": "id",
+													"relation_columns": "[\"name\",\"surname\"]",
+													"mask": null,
+													"regex": null,
+													"lang_support": "0",
+													"state": "1",
+													"description": "",
+													"created_at": "2023-01-04 20:35:24",
+													"updated_at": "2023-01-04 22:09:04",
+													"own_id": "1",
+													"user_id": "1"
+												}
+											},
+											"all_record_count": 8,
+											"page_count": 8,
+											"table_info": {
+												"id": "7",
+												"name": "users",
+												"display": "{\"tr\":\"Kullanıcılar\"}",
+												"fields": "[\"id\",\"name\",\"surname\",\"email\",\"password\",\"phone\",\"settings\",\"auths_group\",\"token\",\"state\",\"description\",\"created_at\",\"updated_at\",\"own_id\",\"user_id\"]",
+												"before_codes": null,
+												"after_codes": null,
+												"state": "1",
+												"description": "",
+												"created_at": "2023-01-04 16:30:44",
+												"updated_at": "2023-01-04 23:29:05",
+												"own_id": "1",
+												"user_id": "1"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/lists/list": {
+			"post": {
+				"tags": ["v1"],
+				"summary": "List Data",
+				"requestBody": {
+					"content": {}
+				},
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/users/show/id:1": {
+			"post": {
+				"tags": ["v1"],
+				"summary": "Show Data",
+				"description": "Tablonuzdan tek veri çekmek için kullanabileceğiniz bu API içinde ilgili data ve kolonlarını barındırmaktadır.  \n\nVerinizi 2 farklı şekilde filtreleyebilirsiniz:\n\n1. İd kullanımı\n    \n\nEğer ki show/ ‘dan sonra bir numara gönderirseniz bu sistem tarafından id olarak tanımlanır ve ona uygun response döner.\n\n2\\. Filtre kullanımı\n\nFiltre kullanımından kasıt istenilen veride unique bir kolonun key:value şeklinde request atılmadır. Örnek verecek olursak ; show/email:robot@erdoganyesil.com.tr . Kullanıcılar tablosunda eposta unique bir değişken olduğu için sadece tek bir veri bulunabilir ve response olarak döner.\n\nörn:\n\n- name:Test7\n- id:1\n- phone:[05555555555](tel:05555555555)",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"example": {
+									"name": "test6"
+								}
+							}
+						}
+					}
+				},
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/lists/create": {
+			"get": {
+				"tags": ["v1"],
+				"summary": "Create Columns Data",
+				"description": "Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa \"column:deger\" şeklinde kullanılabilir\n\nörn:\n\n- name:Test7\n- id:1",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/test/add": {
+			"post": {
+				"tags": ["v1"],
+				"summary": "Add data",
+				"description": "Create request’inde aldığımız kolonları add API’sine göndererek veritabanına ekleme işlemi yapabiliriz. Eğer ki ekleme yaparken yetkisi olmayan kolonlara ekleme yapılmaya çalışırsa o kolonlar silinir ve eklenmez.  \n\nImage eklemesi yapılırken dosya boyutlandırması yapılır ve 4 farklı kolon JSON olarak kaydı gerçekleşir. Bu kolonlar full ve mini olarak iki ayrı boyutlandırma ve bunlara ek başına sisteminizin çalıştığı domain adresi eklenmiş hali olan link kolonlarıdır.  \n\nFile eklemesi yaparken image ile aynı mantıkta çalışır sadece mini kolonu boş gelir.  \n\nTablo eklemesi yaparken(lists) fields tablosunda var olan kolonları eklemelisiniz. Kolonların yetersiz kaldığı durumlarda öncelikle kolonları eklemeli ve tablo eklemeye geri dönmelisiniz. Orada seçtiğiniz durumlara özel sql kodu üretilmekte ve çalıştırılmaktadır. Eklediğiniz tablo sistem tarafından ana yöneticiye tam yetki verir. Siz ilgili yetki gruplarınıza özel eklebilirsiniz.",
+				"requestBody": {
+					"content": {
+						"multipart/form-data": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"example": "image_test"
+									},
+									"file": {
+										"type": "string",
+										"format": "binary"
+									},
+									"asdfasdf": {
+										"type": "string",
+										"example": "asdfasd "
+									}
+								}
+							}
+						}
+					}
+				},
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/users/edit/id:1": {
+			"get": {
+				"tags": ["v1"],
+				"summary": "Edit Columns Data",
+				"description": "Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa \"column:deger\" şeklinde kullanılabilir\n\nörn:\n\n- name:Test7\n- id:1",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/test/update/1": {
+			"post": {
+				"tags": ["v1"],
+				"summary": "Update Data",
+				"description": "Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa \"column:deger\" şeklinde kullanılabilir\n\nörn:\n\n- name:Test7\n- id:1",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"example": {
+									"name": "test2"
+								}
+							}
+						}
+					}
+				},
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/{lang}/test/delete/id:3": {
+			"delete": {
+				"tags": ["v1"],
+				"summary": "Delete Data",
+				"description": "Klasik düzenleme yapılacağı zaman id kullanılıyor,fakat farklı bir ikincil anahtar kullanılacaksa \"column:deger\" şeklinde kullanılabilir\n\nörn:\n\n- name:Test7\n- id:1",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "lang",
+						"in": "path",
+						"schema": {
+							"type": "string"
+						},
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/account/forgot_password": {
+			"get": {
+				"tags": ["account > Forgot password"],
+				"summary": "Columns",
+				"description": "Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.\n\nCaptcha kodu base64 olarak döner.",
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["account > Forgot password"],
+				"summary": "Send Email",
+				"description": "Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.\n\nCaptcha kodu base64 olarak döner.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"example": {
+									"email": "robot2@erdoganyesil.com.tr",
+									"captcha": "08354"
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/account/forgot_new_password": {
+			"post": {
+				"tags": ["account > Forgot password"],
+				"summary": "New password",
+				"description": "Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.\n\nCaptcha kodu base64 olarak döner.",
+				"requestBody": {
+					"content": {}
+				},
+				"parameters": [
+					{
+						"name": "otp",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"example": "805815"
+					},
+					{
+						"name": "email",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"example": "robot2@erdoganyesil.com.tr"
+					},
+					{
+						"name": "password",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"example": "456"
+					},
+					{
+						"name": "password_verification",
+						"in": "query",
+						"schema": {
+							"type": "integer"
+						},
+						"example": "456"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/account/change_email": {
+			"get": {
+				"tags": ["account > Change email"],
+				"summary": "Columns",
+				"description": "Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.\n\nCaptcha kodu base64 olarak döner.",
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["account > Change email"],
+				"summary": "Send Email",
+				"description": "Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.\n\nCaptcha kodu base64 olarak döner.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"example": {
+									"email": "robot2@erdoganyesil.com.tr",
+									"captcha": "08354"
+								}
+							}
+						}
+					}
+				},
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					},
+					{
+						"name": "email",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"example": "erdoganyesil3@gmail.com"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/account/change_new_email": {
+			"post": {
+				"tags": ["account > Change email"],
+				"summary": "New email",
+				"description": "Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.\n\nCaptcha kodu base64 olarak döner.",
+				"requestBody": {
+					"content": {}
+				},
+				"parameters": [
+					{
+						"name": "Authorization",
+						"in": "header",
+						"schema": {
+							"type": "string"
+						},
+						"example": "{{token}}"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		},
+		"/api/account/login": {
+			"post": {
+				"tags": ["account"],
+				"summary": "Login",
+				"description": "GET isteği dışındaki tüm istekleri destekler.\n\nGüvenlik önlemlerinden dolayı get isteği kapatılmıştır.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"example": {
+									"email": "robot@erdoganyesil.com.tr",
+									"password": "RobotKullanıcı"
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"405": {
+						"description": "Method Not Allowed",
+						"headers": {
+							"Connection": {
+								"schema": {
+									"type": "string",
+									"example": "Keep-Alive"
+								}
+							},
+							"X-Powered-By": {
+								"schema": {
+									"type": "string",
+									"example": "PHP/8.1.12"
+								}
+							},
+							"Content-Type": {
+								"schema": {
+									"type": "string",
+									"example": "application/json; charset=utf-8"
+								}
+							},
+							"Content-Length": {
+								"schema": {
+									"type": "integer",
+									"example": "5"
+								}
+							},
+							"Content-Encoding": {
+								"schema": {
+									"type": "string",
+									"example": "br"
+								}
+							},
+							"Vary": {
+								"schema": {
+									"type": "string",
+									"example": "Accept-Encoding"
+								}
+							},
+							"Date": {
+								"schema": {
+									"type": "string",
+									"example": "Sat, 07 Jan 2023 17:12:25 GMT"
+								}
+							},
+							"Server": {
+								"schema": {
+									"type": "string",
+									"example": "LiteSpeed"
+								}
+							}
+						},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/account/register": {
+			"post": {
+				"tags": ["account"],
+				"summary": "Register",
+				"requestBody": {
+					"content": {}
+				},
+				"parameters": [
+					{
+						"name": "name",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"example": "Erdoğan"
+					},
+					{
+						"name": "surname",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"example": "Yeşil"
+					},
+					{
+						"name": "email",
+						"in": "query",
+						"schema": {
+							"type": "string"
+						},
+						"example": "erdoganyesil3@gmail.com"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			},
+			"get": {
+				"tags": ["account"],
+				"summary": "Register Columns",
+				"description": "Üyelik için zorunlu alanlar ve captcha kodu dönmektedir.\n\nCaptcha kodu base64 olarak döner.",
+				"responses": {
+					"200": {
+						"description": "Successful response",
+						"content": {
+							"application/json": {}
+						}
+					}
+				}
+			}
+		}
+	}
+}
