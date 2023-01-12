@@ -42,3 +42,10 @@ $route['api/account/forgot_new_password'] = 'Account/forgot_new_password';
 $route['api/account/change_email'] = 'Account/change_email';
 $route['api/account/change_new_email'] = 'Account/change_new_email';
 
+//Şifre değiştir
+$route['api/account/change_password'] = 'Account/change_password';
+
+
+//Dosya yükleme
+$route['api/v2/file_upload'] = 'BaseV2/file_upload';
+$route['api/v2/file_details'] = 'BaseV2/file_details';

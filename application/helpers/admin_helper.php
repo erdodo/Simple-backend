@@ -56,6 +56,7 @@ header('Content-Type: application/json');
 
 		
 		//Ekle
+		$params['companies_id']=$ci->user['companies_id'];
 		$params['own_id']=$ci->user['id'];
 		$params['user_id']=$ci->user['id'];
 		$params['created_at']=date("y-m-d h:i:s");
@@ -110,6 +111,7 @@ header('Content-Type: application/json');
 
 		
 		//Düzenle
+		$updated_data['companies_id']=$ci->user['companies_id'];
 		$updated_data['user_id']=$ci->user['id'];
 		$updated_data['updated_at']=date("y-m-d h:i:s");
 		$status = $ci->base_model->update($table_name,$updated_data,$config);
@@ -170,8 +172,11 @@ header('Content-Type: application/json');
 		$ci->load->model('base_model');
 
 		$token = $ci->input->request_headers()['Authorization'] ?? NULL;
-            if( empty($token)  || strlen($token) != 32)res_error(["message"=>"token_error","status"=>"error"],401);
-            
-            $ci->input->user = ($ci->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
-			if(empty($ci->input->user))res_error(["message"=>"user_not_found","status"=>"error"],401);
+		if( empty($token)  || strlen($token) != 32)res_error(["message"=>"token_error","status"=>"error"],401);
+		
+		$ci->input->user = (array)($ci->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));
+		if(empty($ci->input->user))res_error(["message"=>"user_not_found","status"=>"error"],401);
+
+		$ci->input->auths_group = ad_show('auths_group','id:'.$ci->input->user['auths_group']);
+		$ci->input->companies = ad_show('companies','id:'.$ci->input->user['companies_id']);
 	}

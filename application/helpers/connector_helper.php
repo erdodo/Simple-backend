@@ -274,12 +274,17 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'file' || $clm['type'] == 'image' ) {
 					$ci->load->helper('url');
 					if(!empty($datas[$key]->$clm_name)){
-						$yakala = json_decode($datas[$key]->$clm_name);
+						$files = json_decode($datas[$key]->$clm_name);
 						$datas[$key]->$clm_name=[];
-						$datas[$key]->$clm_name['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
-						$datas[$key]->$clm_name['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
-						$datas[$key]->$clm_name['full'] = empty($yakala->full)?'':   $yakala->full  ;
-						$datas[$key]->$clm_name['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						foreach ($files as $file_key => $yakala) {
+							
+							$datas[$key]->$clm_name[$file_key]=[];
+							$datas[$key]->$clm_name[$file_key]['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
+							$datas[$key]->$clm_name[$file_key]['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
+							$datas[$key]->$clm_name[$file_key]['full'] = empty($yakala->full)?'':   $yakala->full  ;
+							$datas[$key]->$clm_name[$file_key]['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						}
+						
 					}
 					
 
@@ -377,9 +382,6 @@ header('Content-Type: application/json');
 					$data->$clm_name = $data->$clm_name == 1;
 				}
 				if ($clm['type'] == 'pass') {
-
-
-
 					$data->$clm_name = '*********';
 				}
 				if ($clm['type'] == 'datetime') {
@@ -392,12 +394,17 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'file' || $clm['type'] == 'image' ) {
 					$ci->load->helper('url');
 					if(!empty($data->$clm_name)){
-						$yakala = json_decode($data->$clm_name);
+						$files = json_decode($data->$clm_name);
 						$data->$clm_name=[];
-						$data->$clm_name['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
-						$data->$clm_name['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
-						$data->$clm_name['full'] = empty($yakala->full)?'':   $yakala->full  ;
-						$data->$clm_name['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						foreach ($files as $file_key => $yakala) {
+							
+							$data->$clm_name[$file_key]=[];
+							$data->$clm_name[$file_key]['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
+							$data->$clm_name[$file_key]['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
+							$data->$clm_name[$file_key]['full'] = empty($yakala->full)?'':   $yakala->full  ;
+							$data->$clm_name[$file_key]['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						}
+						
 					}
 					
 
@@ -469,7 +476,7 @@ header('Content-Type: application/json');
 				}
 			}
 			if($value['type']=='file'){
-				$params[$key]= json_encode(upload_file($key));
+				$params[$key]=json_encode(upload_file($key));
 			}
 		}
 		//Olmayan kolon gelirse sil
@@ -495,10 +502,12 @@ header('Content-Type: application/json');
 		}
 		if($table_name == 'lists')$params= create_table($params);
 		//Ekle
+		$params['companies_id']=$ci->user['companies_id'];
 		$params['own_id']=$ci->user['id'];
 		$params['user_id']=$ci->user['id'];
 		$params['created_at']=date("y-m-d h:i:s");
 		$params['updated_at']=date("y-m-d h:i:s");
+		
 		$status = $ci->base_model->add($table_name,$params);
 		$response=[];
 		if($status){
@@ -543,7 +552,7 @@ header('Content-Type: application/json');
 		foreach ($hide_fields as  $clm_name) {
 			unset($fields[$clm_name]);
 		}
-		
+		field_edit_show($fields,$data);
 		$response=[
 			"data"=>$data,
 			"fields"=>$fields,
@@ -552,6 +561,128 @@ header('Content-Type: application/json');
 
 		return $response;
 	}
+	//NOTE - Tek veri gösterim isteğinde verinin daha düzenli gözükmesi için gerekli ayarlar burada yapılıe
+	function field_edit_show($fields,$data)
+	{
+		$ci = get_instance();
+		$ci->load->model('base_model');
+		$ci->user = (array)$ci->input->user;
+		$ci->auths = (array)$ci->input->auths;
+		/*-------------------------------------*/
+		if(!empty($data)){
+			foreach ($fields as $clm_name => $clm) {
+
+				$value = (array)$data;
+				if ($clm['lang_support'] == 1) {
+					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
+					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
+					$lang_record = (array)json_decode($data->$clm_name);
+					$data->$clm_name = empty($lang_record[$ci->lang]) ? $lang_record['tr'] : $lang_record[$ci->lang];
+				}
+				if (!empty($clm['relation_table'])) {
+					//NOTE - Eğer kolonun bağlı oldupu bir tablo var ise bu fonksiyon çalışır.
+					if (intval($data->$clm_name) > 0) {
+						// Eğerki kayıtta id tutuluyorsa bu fonksiyon çalışır
+						$relation_columns = json_decode($clm['relation_columns']);//Hangi kolonlar isteniyor
+						$gecici_id = $data->$clm_name;//kayıt değiştirileceği için id bir değişkene atılı
+						$data->$clm_name = [];//kayıt yeniden yazılmak üzere silinir
+						foreach ($relation_columns as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+							$relation_columns_record_config=(object)[
+								"filters"=>["id" => $gecici_id]
+							];
+							$relation_columns_record = 
+								(array) $ci->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+
+							//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+							$data->$clm_name['id'] = $gecici_id;
+							$data->$clm_name[$rc_value] = 
+								langTranslate(!empty($relation_columns_record[$rc_value]) ? $relation_columns_record[$rc_value] : "", $rc_value);
+						}
+					} else {
+						//NOTE - Eğer ki kayıtta birden fazla id (yada ikincil anahtar olarak ne seçildiyse ) varsa bu fonksiyon tetiklenir.
+						if (empty($data->$clm_name)) continue;
+
+						//Text durumundaki array, uygun hale getirilir ve döngüye alınır.
+						$degerler = json_decode($data->$clm_name);
+						if (is_array($degerler) || is_object($degerler)) {
+							//Eğer gerçekten array ise burası çalışır
+							$data->$clm_name = [];
+							foreach ($degerler as $r_value) {
+								$relation_ids_record_config=(object)[
+									"filters"=>[$clm['relation_id'] => $r_value]
+								];
+								$relation_ids_record = (array) $ci->base_model->show($clm['relation_table'], $relation_ids_record_config);
+								$data->$clm_name[$r_value][$clm['relation_id']] = 
+									!empty($relation_ids_record[$clm['relation_id']]) ? $relation_ids_record[$clm['relation_id']] : "";
+
+								$relation_columns = json_decode($clm['relation_columns']);
+								foreach ($relation_columns as $rc_key => $rc_value) {
+									$relation_columns_record_config=(object)[
+										"filters"=>[$clm['relation_id'] => $r_value]
+									];
+									$relation_columns_record = (array) $ci->base_model->show($clm['relation_table'], $relation_columns_record_config);
+									$data->$clm_name[$r_value][$rc_value] = 
+										langTranslate(!empty($relation_columns_record[$rc_value]) ? $relation_columns_record[$rc_value] : "", $rc_value);
+								}
+							}
+						} else {
+							//Eğer ki array değil text ise burası çalışır
+							$val = $data->$clm_name;
+							$data->$clm_name = [];
+							$gecici4 = (array) $ci->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+
+
+							$data->$clm_name[$clm['relation_id']] = !empty($gecici4[$clm['relation_id']]) ? $gecici4[$clm['relation_id']] : "";
+
+							$relation_columns = json_decode($clm['relation_columns']);
+							
+							foreach ($relation_columns as $rc_key => $rc_value) {
+
+								$gecici3 = (array) $ci->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+								
+								$data->$clm_name[$rc_value] = langTranslate(!empty($gecici3[$rc_value]) ? $gecici3[$rc_value] : "", $rc_value);
+							}
+						}
+					}
+				}
+				if ($clm['type'] == 'bool') {
+					$data->$clm_name = $data->$clm_name == 1;
+				}
+				if ($clm['type'] == 'pass') {
+					$data->$clm_name = '*********';
+				}
+				if ($clm['type'] == 'datetime') {
+					$data->$clm_name = date_format(date_create($data->$clm_name),"d/m/y H:i:s");
+				}
+				if ($clm['type'] == 'array' ) {
+					$array_record = empty($data->$clm_name)? "[]":$data->$clm_name;
+					$data->$clm_name = json_decode($array_record) ?? $data->$clm_name;
+				}
+				if ($clm['type'] == 'file' || $clm['type'] == 'image' ) {
+					$ci->load->helper('url');
+					if(!empty($data->$clm_name)){
+						$files = json_decode($data->$clm_name);
+						unset($data->$clm_name);
+						$clm_name="old_".$clm_name;
+						$data->$clm_name=[];
+						foreach ($files as $file_key => $yakala) {
+							
+							$data->$clm_name[$file_key]=[];
+							$data->$clm_name[$file_key]['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
+							$data->$clm_name[$file_key]['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
+							$data->$clm_name[$file_key]['full'] = empty($yakala->full)?'':   $yakala->full  ;
+							$data->$clm_name[$file_key]['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						}
+						
+					}
+					
+
+				}
+			
+		}
+		}
+	}
+	/*-------------------------------------------------------------------------*/
 	function db_update($lang, $table_name,$filter)
 	{
 		$ci = get_instance();
@@ -605,6 +736,12 @@ header('Content-Type: application/json');
 					$error_state=TRUE;
 				}
 			}
+			if($value['type']=='file'){
+				$old_file =empty($updated_data[$key])?[]: json_decode($updated_data[$key]);
+				$all_file=array_merge($old_file ,upload_file($key));
+				
+				$updated_data[$key]=json_encode($all_file);
+			}
 		}
 
 
@@ -627,6 +764,7 @@ header('Content-Type: application/json');
 		//Düzenle
 		$updated_data['user_id']=$ci->user['id'];
 		$updated_data['updated_at']=date("y-m-d h:i:s");
+		
 		$status = $ci->base_model->update($table_name,$updated_data,$config);
 		$response=[];
 		if($status){
@@ -825,6 +963,9 @@ header('Content-Type: application/json');
                 case 'json':
                     $field_type="TEXT";
                     break;
+				case 'float':
+					$field_type="FLOAT";
+					break;
                 default:
                     # code...
                     break;

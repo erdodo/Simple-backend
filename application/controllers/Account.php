@@ -248,17 +248,17 @@ class Account extends CI_Controller
             "status"=>"success"
         ];
         if(empty($params['email'])){
-            array_push($response['data']['required'],'email');
+            array_push($response['required'],'email');
             $response['status']='error';
             $response['message']="required_error";
         }
         if(empty($params['password'])){
-            array_push($response['data']['required'],'password');
+            array_push($response['required'],'password');
             $response['status']='error';
             $response['message']="required_error";
         }
         if(empty($params['password_verification'])){
-            array_push($response['data']['required'],'password_verification');
+            array_push($response['required'],'password_verification');
             $response['status']='error';
             $response['message']="required_error";
         }
@@ -314,6 +314,7 @@ class Account extends CI_Controller
             
             if($this->settings['dev_mode']){
                 $response['otp']=$otp;
+                $response['email']=$params['email'];
             }
             $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
             
@@ -322,9 +323,95 @@ class Account extends CI_Controller
     public function change_new_email()
     {
         //kullanıcı yeni epostası ve otp göndersin
+        //kullanıcı otp, eposta ve yeni şifresini gönderecek
+        //session ile kullanıcı doğrulaması yapılabilie
+        $body = (array)json_decode($this->input->raw_input_stream) ?? [];
+        $post = $this->input->post() ?? [];
+        $get = $this->input->get() ?? [];
+        $params=[];
+        if(!empty($post))$params = $post;
+        if(!empty($body))$params = $body;
+        if(!empty($get))$params = $get;
+        if(empty($_SESSION['change_email']) || empty($params['otp'])|| $params['otp'] != $_SESSION['change_email']){
+            res_error(["message"=>"otp_error","status"=>"error"]);
+            
+        }
+        $response=[
+            "required"=>[],
+            "message"=>"",
+            "status"=>"success"
+        ];
+        if(empty($params['email'])){
+            array_push($response['required'],'email');
+            $response['status']='error';
+            $response['message']="required_error";
+        }
+
+        if($response['status']=='error'){
+            res_error($response);
+            
+        }
+        get_user();
+
+        $response['status'] = ad_update('users','id:'.$this->input->user['id'],['email'=>$params['email']])?"success":"error";
+        if($response['status']=='success'){
+            unset($response['required']);
+        }
+        $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
     }
     public function change_password()
     {
+        get_user();
+        if($this->input->method()=='get'){
+            
+        }
         //kullanıcı eski şifresi, yeni şifresi ve kontrol şifresi göndersin
+        $body = (array)json_decode($this->input->raw_input_stream) ?? [];
+        $post = $this->input->post() ?? [];
+        $params=[];
+        if(!empty($post))$params = $post;
+        if(!empty($body))$params = $body;
+        
+        $response=[
+            "required"=>[],
+            "message"=>"",
+            "status"=>"success"
+        ];
+        if(empty($params['old_password'])){
+            array_push($response['required'],'old_password');
+            $response['status']='error';
+            $response['message']="required_error";
+        }
+        if(empty($params['new_password'])){
+            array_push($response['required'],'new_password');
+            $response['status']='error';
+            $response['message']="required_error";
+        }
+        if(empty($params['new_password_verification'])){
+            array_push($response['required'],'new_password_verification');
+            $response['status']='error';
+            $response['message']="required_error";
+        }
+        if(empty($params['new_password_verification']) || $params['new_password_verification'] != $params['new_password']){
+            $response['message']='password_not_verified';
+            $response['status']='error';
+        }
+        if($params['old_password'] != $this->input->user['password']){
+            $response['message']='wrong_password';
+            $response['status']='error';
+        }
+
+        if($response['status']=='error'){
+            res_error($response);
+        }
+        unset($response['required']);
+        unset($response['message']);
+        
+
+        $response['status'] = ad_update('users','id:'.$this->input->user['id'],['password'=>$params['new_password']])?"success":"error";
+        if($response['status']=='success'){
+            unset($response['required']);
+        }
+        $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
     }
 }
