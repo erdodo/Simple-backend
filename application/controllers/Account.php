@@ -1,6 +1,6 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-header('Content-Type: application/json');
+
 class Account extends CI_Controller
 {
     public $settings=[];
@@ -14,8 +14,14 @@ class Account extends CI_Controller
         get_def_emails();
         $this->input->user=ad_show('users','id:1');
     }
-    public function login()
+    public function index()
     {
+        header('Content-Type: text/html; charset=UTF-8');
+        $this->load->view('document');
+    }
+    public function login()
+
+    {header('Content-Type: application/json');
         if($this->input->method() == 'get'){
             $this->output
 			->set_content_type('application/json', 'utf-8')
