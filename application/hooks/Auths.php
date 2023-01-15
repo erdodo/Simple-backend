@@ -14,6 +14,7 @@ class Auths extends CI_Controller
 		
         if($params['standart'] =='v1'){
             $token = $this->input->request_headers()['Authorization'] ?? NULL;
+			if(empty($token))$token = $this->input->get('token')??NULL;
             if( empty($token)  || strlen($token) != 32)res_error(["message"=>"token_error","status"=>"error"],401);
             
             $this->input->user = ($this->auths_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));

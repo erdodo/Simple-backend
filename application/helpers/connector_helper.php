@@ -293,12 +293,17 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'file' || $clm['type'] == 'image' ) {
 					$ci->load->helper('url');
 					if(!empty($datas[$key]->$clm_name)){
-						$yakala = json_decode($datas[$key]->$clm_name);
+						$files = json_decode($datas[$key]->$clm_name);
 						$datas[$key]->$clm_name=[];
-						$datas[$key]->$clm_name['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
-						$datas[$key]->$clm_name['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
-						$datas[$key]->$clm_name['full'] = empty($yakala->full)?'':   $yakala->full  ;
-						$datas[$key]->$clm_name['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						foreach ($files as $file_key => $yakala) {
+							
+							$datas[$key]->$clm_name[$file_key]=[];
+							$datas[$key]->$clm_name[$file_key]['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
+							$datas[$key]->$clm_name[$file_key]['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
+							$datas[$key]->$clm_name[$file_key]['full'] = empty($yakala->full)?'':   $yakala->full  ;
+							$datas[$key]->$clm_name[$file_key]['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						}
+						
 					}
 					
 
@@ -403,9 +408,6 @@ header('Content-Type: application/json');
 					$data->$clm_name = $data->$clm_name == 1;
 				}
 				if ($clm['type'] == 'pass') {
-
-
-
 					$data->$clm_name = '*********';
 				}
 				if ($clm['type'] == 'datetime') {
@@ -418,12 +420,17 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'file' || $clm['type'] == 'image' ) {
 					$ci->load->helper('url');
 					if(!empty($data->$clm_name)){
-						$yakala = json_decode($data->$clm_name);
+						$files = json_decode($data->$clm_name);
 						$data->$clm_name=[];
-						$data->$clm_name['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
-						$data->$clm_name['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
-						$data->$clm_name['full'] = empty($yakala->full)?'':   $yakala->full  ;
-						$data->$clm_name['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						foreach ($files as $file_key => $yakala) {
+							
+							$data->$clm_name[$file_key]=[];
+							$data->$clm_name[$file_key]['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
+							$data->$clm_name[$file_key]['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
+							$data->$clm_name[$file_key]['full'] = empty($yakala->full)?'':   $yakala->full  ;
+							$data->$clm_name[$file_key]['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						}
+						
 					}
 					
 
@@ -506,7 +513,7 @@ header('Content-Type: application/json');
 				}
 			}
 			if($value['type']=='file'){
-				$params[$key]= json_encode(upload_file($key));
+				$params[$key]=json_encode(upload_file($key));
 			}
 			if($value['type']=="password" && !empty($params[$key])){
 				$params[$key]=password_hash($params[$key], PASSWORD_DEFAULT);
@@ -530,10 +537,12 @@ header('Content-Type: application/json');
 
 		if($table_name == 'lists')$params= create_table($params);
 		//Ekle
+		$params['companies_id']=$ci->user['companies_id'];
 		$params['own_id']=$ci->user['id'];
 		$params['user_id']=$ci->user['id'];
 		$params['created_at']=date("y-m-d h:i:s");
 		$params['updated_at']=date("y-m-d h:i:s");
+		
 		$status = $ci->base_model->add($table_name,$params);
 		$response=[];
 		if($status){
@@ -578,7 +587,7 @@ header('Content-Type: application/json');
 		foreach ($hide_fields as  $clm_name) {
 			unset($fields[$clm_name]);
 		}
-		
+		field_edit_show($fields,$data);
 		$response=[
 			"data"=>$data,
 			"fields"=>$fields,
@@ -587,7 +596,7 @@ header('Content-Type: application/json');
 
 		return $response;
 	}
-	function db_update($table_name,$filter)
+	function db_update($lang, $table_name,$filter)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -651,9 +660,6 @@ header('Content-Type: application/json');
 					$response['status']="error";
 				}
 			}
-			if($value['type']=="password" && !empty($params[$key])){
-				$params[$key]=password_hash($params[$key], PASSWORD_DEFAULT);
-			}
 		}
 
 
@@ -677,6 +683,7 @@ header('Content-Type: application/json');
 		//Düzenle
 		$updated_data['user_id']=$ci->user['id'];
 		$updated_data['updated_at']=date("y-m-d h:i:s");
+		
 		$status = $ci->base_model->update($table_name,$updated_data,$config);
 		$response=[];
 		if($status){
@@ -876,6 +883,9 @@ header('Content-Type: application/json');
                 case 'json':
                     $field_type="TEXT";
                     break;
+				case 'float':
+					$field_type="FLOAT";
+					break;
                 default:
                     # code...
                     break;
