@@ -28,6 +28,7 @@
 		'stricton' => FALSE,
 		'failover' => array()
 	);
+	
 	$db['phpmyadmin'] = array(
 		'dsn'   => '',
 		'hostname' => $hostname,

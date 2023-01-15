@@ -134,7 +134,7 @@ header('Content-Type: application/json');
 
 		
 		//Default filtreler
-		$where = $ci->auths['default_auths_id'] ?? [];
+		$where = $ci->auths['default_auths'] ?? [];
 		$filters=[];
 		foreach ($where as $k => $val) {
 			$str = strval(explode("=",$val['codes'])[1]);

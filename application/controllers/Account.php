@@ -122,7 +122,7 @@ class Account extends CI_Controller
             $columns =  json_decode($this->settings['register_columns']);
             $fields=[];
             foreach ($columns as $value) {
-                $fields[$value] = db_show("tr",'fields',"name:$value")['data'];
+                $fields[$value] = db_show('fields',"name:$value")['data'];
             }
 
             $fields['captcha'] =captcha();
@@ -139,11 +139,13 @@ class Account extends CI_Controller
             if(empty($params["captcha"]) || md5($params["captcha"]) != $_SESSION['captcha_control']){
                 res_error(['message'=>"captcha_error","status"=>"error"]);
             }
-
+            
+            
             $columns =  json_decode($this->settings['register_columns']);
             $response=[
                 "message"=>"",
-                "required"=>[]
+                "error"=>["required"=>[]],
+                "status"=>"success"
             ];
             foreach ($columns as  $value) {
                 if(empty($params[$value])){
@@ -151,13 +153,25 @@ class Account extends CI_Controller
                     $response['status']="error";
                     $response['message']="required_error";
                 }
+                
+                if(ad_show('fields',"name:".$value)->type=="password"){
+                    $p =password_hash($params[$value], PASSWORD_DEFAULT);
+                    $params[$value]=$p;
+                }
+                print_r(ad_show('fields',"name:".$value)->type);
             }
             if($response['status']=="error"){
                 res_error($response);
                
             }
+            if(!empty(ad_show('users','email:'.$params['email']))){
+                $response["error"]['unique']=["email"];
+                $response['status']="error";
+                $response['message']="unique_error";
+                res_error($response);
+            }
             unset($params['captcha']);
-            unset($response['required']);
+            unset($response['error']);
             
             
             $this->load->model('base_model');

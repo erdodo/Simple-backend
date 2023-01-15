@@ -6,10 +6,9 @@ class Auths extends CI_Controller
     public function index()
     {
         $params['standart'] = $this->uri->segments[2]??NULL;
-        $params['lang'] = $this->uri->segments[3]??NULL;
-        $params['table'] = $this->uri->segments[4]??NULL;
-        $params['fun'] = $this->uri->segments[5]??NULL;
-        $params['filter'] = $this->uri->segments[6]??NULL;        
+        $params['table'] = $this->uri->segments[3]??NULL;
+        $params['fun'] = $this->uri->segments[4]??NULL;
+        $params['filter'] = $this->uri->segments[5]??NULL;        
 		
         $this->load->model("auths_model");
 		
@@ -45,7 +44,8 @@ class Auths extends CI_Controller
             $auths = (array) $this->auths_model->show('auths',$auths_config);
 			if(empty($auths))res_error(["message"=>"auths_not_found","status"=>"error"],401);
 			
-			$this->input->auths = $this->detail("tr",'auths',$auths['id']);
+
+			$this->input->auths =$this->detail("tr",'auths',$auths['id']);
 			$this->auths_model->add('logs',[
 				"method_name"=>$params['fun'],
 				"url" => $this->uri->uri_string,

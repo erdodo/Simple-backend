@@ -14,19 +14,19 @@ $route['api'] = 'Account/token_control';
 
 
 //Listeleme
-$route['api/v1/(:any)/(:any)/list'] = 'Base/list/$1/$2';//Dil,tablo adı
-$route['api/v1/(:any)/(:any)/show/(:any)'] = 'Base/show/$1/$2/$3';//Dil, tablo adı, filter
+$route['api/v1/(:any)/list'] = 'Base/list/$1';//Tablo adı
+$route['api/v1/(:any)/show/(:any)'] = 'Base/show/$1/$2';//Tablo adı, filter
 
 //Ekleme
-$route['api/v1/(:any)/(:any)/add'] = 'Base/add/$1/$2';//Dil,tablo adı
-$route['api/v1/(:any)/(:any)/create'] = 'Base/create/$1/$2';//Dil,tablo adı
+$route['api/v1/(:any)/add'] = 'Base/add/$1';//tablo adı
+$route['api/v1/(:any)/create'] = 'Base/create/$1';//tablo adı
 
 //Güncelleme
-$route['api/v1/(:any)/(:any)/update/(:any)'] = 'Base/update/$1/$2/$3';//Dil, tablo adı, filter
-$route['api/v1/(:any)/(:any)/edit/(:any)'] = 'Base/edit/$1/$2/$3';//Dil, tablo adı, filter
+$route['api/v1/(:any)/update/(:any)'] = 'Base/update/$1/$2';// tablo adı, filter
+$route['api/v1/(:any)/edit/(:any)'] = 'Base/edit/$1/$2';// tablo adı, filter
 
 //Silme
-$route['api/v1/(:any)/(:any)/delete/(:any)'] = 'Base/delete/$1/$2/$3';//Dil, tablo adı, filter
+$route['api/v1/(:any)/delete/(:any)'] = 'Base/delete/$1/$2';// tablo adı, filter
 
 //Giriş
 $route['api/account/login'] = 'Account/login';

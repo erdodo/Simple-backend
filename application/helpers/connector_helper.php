@@ -2,7 +2,6 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 header('Content-Type: application/json');
 
-	$lang = 'tr';
 	$user = [];	
 	$auths = [];	
 	$settings=[];
@@ -16,7 +15,7 @@ header('Content-Type: application/json');
 	}
 
 	//NOTE - Klasik listeleme isteği
-	function db_list($lang, $table_name)
+	function db_list($table_name)
 	{
 		$ci =& get_instance();
 		$ci->load->model('base_model');
@@ -26,19 +25,10 @@ header('Content-Type: application/json');
 		
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
 		
-		//Default filtreler
-		$where = $ci->auths['default_auths_id'] ?? NULL;
-		$where = empty($where)?[]:$where;
-		$filters=[];
-		foreach ($where as $k => $val) {
-
-			$str = strval(explode("=",$val['codes'])[1]);
-			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
-		}
 		
 
 		//Hangi dil kullanılıyor
-		$ci->lang = $lang;
+		
 		$body = (array)json_decode($ci->input->raw_input_stream) ?? [];
 		$post = $ci->input->post() ?? [];
 		$get = $ci->input->get() ?? [];
@@ -72,9 +62,13 @@ header('Content-Type: application/json');
 
 		//Filtreleme bölümü
 		$body_filters =json_decode($params["filters"]??"[]");// ["name=lists"];
-		
+		$filters=[];
 		foreach ($body_filters??[] as $value) {
 			$filters[explode('=',$value)[0]]=explode('=',$value)[1];
+		}
+		//Default filtreler
+		foreach (getDBFilters() as $key => $value) {
+			$filters[$key]=$value;
 		}
 
 		//Veri çekme ayarları
@@ -129,7 +123,7 @@ header('Content-Type: application/json');
 	}
 	/*-------------------------------------------------------------------------*/
 	//NOTE - Klasik tek veri gösterme isteği
-	function db_show($lang, $table_name,$filter)
+	function db_show($table_name,$filter)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -139,16 +133,17 @@ header('Content-Type: application/json');
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
 		
 		//Default filtreler
-		$where = $ci->auths['default_auths_id'] ?? [];
-		$filters=[];
-		foreach ($where as $k => $val) {
-			$str = strval(explode("=",$val['codes'])[1]);
-			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
+		
+		
+		
+
+		
+		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		foreach (getDBFilters() as $key => $value) {
+			$filters[$key]=$value;
 		}
-		$ci->lang = $lang;
-		$filters2 = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		$config=(object)[
-			'filters'=>array_merge($filters,$filters2)
+			'filters'=>$filters
 		];
 		$data = ($ci->base_model->show($table_name,$config));
 		if(empty($data))res_error(["message"=>"data_not_found","status"=>"error"]);
@@ -174,6 +169,30 @@ header('Content-Type: application/json');
 		return $response;
 	}
 	/*-------------------------------------------------------------------------*/
+	function getDBFilters()
+	{
+		$ci =& get_instance();
+		$ci->load->model('base_model');
+		$user = (array)$ci->input->user;
+		$auths = (array)$ci->input->auths;
+		/*-------------------------------*/
+		$where = $ci->auths['default_auths'] ?? NULL;
+		
+		$where = empty($where)?[]:$where;
+		$filters=[];
+		foreach ($where as $k => $val) {
+			if(empty(key((array)eval($val['codes']))) || 
+				empty(current((array)eval($val['codes'])))) {
+				continue;
+			}
+			
+
+			$filters[key((array)eval($val['codes']))]=current((array)eval($val['codes']));
+			
+		}
+
+		return $filters;
+	}
 	//NOTE - Listeleme isteğinde verinin daha düzenli gözükmesi için gerekli ayarlar burada yapılıe
 	function field_list_show($fields,$datas)
 	{
@@ -186,12 +205,12 @@ header('Content-Type: application/json');
 			
 			foreach ($datas as $key => $v) {
 				$value = (array)$v;
-				if ($clm['lang_support'] == 1) {
+				/*if ($clm['lang_support'] == 1) {
 					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
 					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
 					$lang_record = (array)json_decode($datas[$key]->$clm_name);
-					$datas[$key]->$clm_name = empty($lang_record[$lang]) ? $lang_record['tr'] : $lang_record[$lang];
-				}
+					$datas[$key]->$clm_name = empty($lang_record[]) ? $lang_record['tr'] : $lang_record[];
+				}*/
 				if (!empty($clm['relation_table'])) {
 					//NOTE - Eğer kolonun bağlı oldupu bir tablo var ise bu fonksiyon çalışır.
 					if (intval($datas[$key]->$clm_name) > 0) {
@@ -284,7 +303,7 @@ header('Content-Type: application/json');
 					
 
 				}
-				//TODO 'file','image'
+
 			}
 		}
 	}
@@ -304,8 +323,10 @@ header('Content-Type: application/json');
 				if ($clm['lang_support'] == 1) {
 					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
 					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
-					$lang_record = (array)json_decode($data->$clm_name);
+					/*$lang_record = (array)json_decode($data->$clm_name);
 					$data->$clm_name = empty($lang_record[$ci->lang]) ? $lang_record['tr'] : $lang_record[$ci->lang];
+					*/
+
 				}
 				if (!empty($clm['relation_table'])) {
 					//NOTE - Eğer kolonun bağlı oldupu bir tablo var ise bu fonksiyon çalışır.
@@ -357,7 +378,10 @@ header('Content-Type: application/json');
 							//Eğer ki array değil text ise burası çalışır
 							$val = $data->$clm_name;
 							$data->$clm_name = [];
-							$gecici4 = (array) $ci->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+							$relation_columns_record_config=(object)[
+								"filters"=>[$clm['relation_id'] => $val]
+							];
+							$gecici4 = (array) $ci->base_model->show($clm['relation_table'], $relation_columns_record_config);
 
 
 							$data->$clm_name[$clm['relation_id']] = !empty($gecici4[$clm['relation_id']]) ? $gecici4[$clm['relation_id']] : "";
@@ -365,8 +389,10 @@ header('Content-Type: application/json');
 							$relation_columns = json_decode($clm['relation_columns']);
 							
 							foreach ($relation_columns as $rc_key => $rc_value) {
-
-								$gecici3 = (array) $ci->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+								$relation_columns_record_config=(object)[
+									"filters"=>[$clm['relation_id'] => $val]
+								];
+								$gecici3 = (array) $ci->base_model->show($clm['relation_table'], $relation_columns_record_config);
 								
 								$data->$clm_name[$rc_value] = langTranslate(!empty($gecici3[$rc_value]) ? $gecici3[$rc_value] : "", $rc_value);
 							}
@@ -408,7 +434,7 @@ header('Content-Type: application/json');
 	}
 	/*-------------------------------------------------------------------------*/
 	//NOTE - Klasik ekleme kolonları çekme isteği
-	function db_create($lang, $table_name)
+	function db_create($table_name)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -416,7 +442,7 @@ header('Content-Type: application/json');
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
 
-		$ci->lang = $lang;
+		
 		
 		$fields= get_columns($table_name);
 		//Yetkisine göre kolon gizleme
@@ -434,7 +460,7 @@ header('Content-Type: application/json');
 		return $response;
 	}
 	//NOTE - Klasik veri ekleme isteği
-	function db_add($lang, $table_name)
+	function db_add($table_name)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -454,24 +480,40 @@ header('Content-Type: application/json');
 		if(!empty($get))$params = $get;
 		
 		
-		
 		//Hata basmalar
-		$required=[];
-		$error_state=FALSE;
-		//Zorunluluk kontrolleri
+		$response=[
+			"error"=>[
+			"required"=>[],
+			"unique"=>[]
+			],
+			"status"=>"success"
+		];
+		//Benzersiz kontrolleri
 		$columns = get_columns($table_name);
+		//Zorunluluk kontrolleri
 		foreach ($columns as $key => $value) {
 			if($value['required'] == 1){
 				if(empty($params[$key])){
-					$required=[];
-					array_push($required,$key);
+					array_push($response['error']['required'],$key);
+					$response['status']="error";
+				}
+			}
+			if($value['benzersiz'] == 1 && !empty($params[$key])){
+				if(!empty(ad_show($table_name,$key.':'.$params[$key]))){
+					array_push($response['error']['unique'],$key);
 					$error_state=TRUE;
+					$response['status']="error";
 				}
 			}
 			if($value['type']=='file'){
 				$params[$key]= json_encode(upload_file($key));
 			}
+			if($value['type']=="password" && !empty($params[$key])){
+				$params[$key]=password_hash($params[$key], PASSWORD_DEFAULT);
+			}
 		}
+
+
 		//Olmayan kolon gelirse sil
 		foreach ($params as $key => $value) {
 			if(empty($columns[$key])){
@@ -484,15 +526,8 @@ header('Content-Type: application/json');
 		foreach ($hide_fields as  $clm_name) {
 			unset($params[$clm_name]);
 		}
-		if($error_state){
-			$response=[
-				"required"=>$required,
-				"message"=>"required_error",
-				"status"=>"error"
-			];
-			res_error($response);
-		die();
-		}
+		if($response['status']=="error")res_error($response);
+
 		if($table_name == 'lists')$params= create_table($params);
 		//Ekle
 		$params['own_id']=$ci->user['id'];
@@ -513,22 +548,22 @@ header('Content-Type: application/json');
 		return $response;
 		
 	}
-	function db_edit($lang, $table_name,$filter)
+	function db_edit($table_name,$filter)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
-		$ci->lang = $lang;
 		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		
+
 
 		//Default filtreler
-		$where = $ci->auths['default_auths_id'] ?? [];
-		foreach ($where as $k => $val) {
-			$str = strval(explode("=",$val['codes'])[1]);
-			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
+		foreach (getDBFilters() as $key => $value) {
+			$filters[$key]=$value;
 		}
+		
 		$config=(object)[
 			'filters'=>$filters
 		];
@@ -552,7 +587,7 @@ header('Content-Type: application/json');
 
 		return $response;
 	}
-	function db_update($lang, $table_name,$filter)
+	function db_update($table_name,$filter)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -562,10 +597,8 @@ header('Content-Type: application/json');
 		//düzenleme isteği
 		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		//Default filtreler
-		$where = $ci->auths['default_auths_id'] ?? [];
-		foreach ($where as $k => $val) {
-			$str = strval(explode("=",$val['codes'])[1]);
-			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
+		foreach (getDBFilters() as $key => $value) {
+			$filters[$key]=$value;
 		}
 		$config=(object)[
 			'filters'=>$filters
@@ -584,7 +617,17 @@ header('Content-Type: application/json');
 		if(!empty($body))$params = $body;
 		if(!empty($get))$params = $get;
 		
-		
+
+		//Hata basmalar
+		$response=[
+			"error"=>[
+			"required"=>[],
+			"unique"=>[]
+			],
+			"status"=>"success"
+		];
+		//Benzersiz kontrolleri
+		$columns = get_columns($table_name);
 
 		//Ön güncelleme
 		$updated_data=[];
@@ -592,18 +635,24 @@ header('Content-Type: application/json');
 			$updated_data[$key]=empty($params[$key])?$value:$params[$key];
 		}
 		
-		//Hata basmalar
-		$required=[];
-		$error_state=FALSE;
+		
 		//Zorunluluk kontrolleri
-		$columns = get_columns($table_name);
 		foreach ($columns as $key => $value) {
 			if($value['required'] == 1){
 				if(empty($updated_data[$key])){
-					$required=[];
-					array_push($required,$key);
-					$error_state=TRUE;
+					array_push($response['error']['required'],$key);
+					$response['status']="error";
 				}
+			}
+			if($value['benzersiz'] == 1 && !empty($params[$key])){
+				if(!empty(ad_show($table_name,$key.':'.$params[$key]))){
+					array_push($response['error']['unique'],$key);
+					$error_state=TRUE;
+					$response['status']="error";
+				}
+			}
+			if($value['type']=="password" && !empty($params[$key])){
+				$params[$key]=password_hash($params[$key], PASSWORD_DEFAULT);
 			}
 		}
 
@@ -613,6 +662,7 @@ header('Content-Type: application/json');
 			if(empty($columns[$key])){
 				unset($params[$key]);
 			}
+			
 		}
 		//Gizlenecek kolonları veritabanına gönderme
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
@@ -622,8 +672,8 @@ header('Content-Type: application/json');
 		}
 
 
-		if($error_state)res_error(["message"=>"required_error",""=>$required,"status"=>"error"]);
-
+		if($response['status']=="error")res_error($response);
+		
 		//Düzenle
 		$updated_data['user_id']=$ci->user['id'];
 		$updated_data['updated_at']=date("y-m-d h:i:s");
@@ -640,7 +690,7 @@ header('Content-Type: application/json');
 
 		return $response;
 	}
-	function db_delete($lang, $table_name,$filter)
+	function db_delete($table_name,$filter)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -650,16 +700,16 @@ header('Content-Type: application/json');
 
 		
 		//Default filtreler
-		$where = $ci->auths['default_auths_id'] ?? [];
+		$where = $ci->auths['default_auths'] ?? [];
 		$filters=[];
-		foreach ($where as $k => $val) {
-			$str = strval(explode("=",$val['codes'])[1]);
-			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
+		
+		
+		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		foreach (getDBFilters() as $key => $value) {
+			$filters[$key]=$value;
 		}
-		$ci->lang = $lang;
-		$filters2 = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		$config=(object)[
-			'filters'=>array_merge($filters,$filters2)
+			'filters'=>$filters
 		];
 		$data = ($ci->base_model->show($table_name,$config));
 
@@ -685,14 +735,14 @@ header('Content-Type: application/json');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
-		$lang_support_config=(object)[
+		$lang_support_support_config=(object)[
 			"filters"=>['name' => $column]
 		];
 		
-		$clm_data = $ci->base_model->show('fields', $lang_support_config);
+		$clm_data = $ci->base_model->show('fields', $lang_support_support_config);
 		$lang_support =  empty($clm_data->lang_support) ? FALSE : $clm_data->lang_support == 1 ;
 		
-		if ($lang_support && !empty($data)) {
+		if ($lang_support && !empty($data) && FALSE) {
 			$gecici = (array)json_decode($data);
 			return empty($gecici[$ci->lang]) ?
 			 $gecici['tr'] : $gecici[$ci->lang];
@@ -700,7 +750,7 @@ header('Content-Type: application/json');
 			return $data;
 		}
 	}
-	function get_columns( $table_name)
+	function get_columns($table_name)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -743,6 +793,7 @@ header('Content-Type: application/json');
             $ci->settings[$value->set_key]=$value->set_value;
         }
     }
+
 	function get_def_emails()
 	{
 		$ci = get_instance();
@@ -831,8 +882,9 @@ header('Content-Type: application/json');
             }
 
             $before_field = empty($old_field)?"id":$old_field;
+			$unique =$field_detail->benzersiz ?", ADD UNIQUE (`$field_name`)":"";
             
-            $create_field_sql="ALTER TABLE `$table_name` ADD `$field_name` $field_type $field_required AFTER `$before_field`;";   
+            $create_field_sql="ALTER TABLE `$table_name` ADD `$field_name` $field_type $field_required AFTER `$before_field` $unique;";   
             $ci->base_model->set_query($create_field_sql);
             $old_field = $field_detail->name; 
         }
