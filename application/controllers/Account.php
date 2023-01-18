@@ -21,7 +21,8 @@ class Account extends CI_Controller
     }
     public function login()
 
-    {header('Content-Type: application/json');
+    {
+        header('Content-Type: application/json');
         if($this->input->method() == 'get'){
             $this->output
 			->set_content_type('application/json', 'utf-8')
@@ -42,9 +43,9 @@ class Account extends CI_Controller
 		$token_hours = $this->settings['token_hours'];
 		$multi_login = $this->settings['multi_login'];
           $step_login = $this->settings['step_login'];
-		$first_step_login_fields = $this->settings['first_step_login_fields'];
+		$first_step_login_fields = json_decode($this->settings['first_step_login_fields']);
 
-        
+        $data=[];
 
         $response=[];
         if($step_login == 1 && !empty($params['email']) && empty($params['password'])){
@@ -77,9 +78,10 @@ class Account extends CI_Controller
             $response['status']="error";
         }else if(!empty($params['email']) && !empty($params['password'])){
             //echo "Direkt giriş";
-            $users_config=(object)['filters'=>['email'=>$params['email'],'password'=>$params['password']]];
+            $users_config=(object)['filters'=>['email'=>$params['email']]];
             $data = (array)$this->base_model->show('users',$users_config);
-            if(!empty($data)){
+            $verify = password_verify($params['password'], $data['password']);
+            if($verify){
                 foreach ($first_step_login_fields as $clm) {
                     $response['data'][$clm]=$data[$clm];
                 }
@@ -89,8 +91,7 @@ class Account extends CI_Controller
         }
 
         if($response['status']=='success'){
-            $users_config=(object)['filters'=>['email'=>$params['email'],'password'=>$params['password']]];
-            $data = (array)$this->base_model->show('users',$users_config);
+            
             $tokens = json_decode($data['token']??"[]")??[];
             $token=md5(microtime(TRUE));
             //şehir bilgisi
@@ -100,13 +101,28 @@ class Account extends CI_Controller
             $params=[
                 'token'=>$token,
                 "city"=>$details->city??NULL,
-                "user_ip"=>$_SERVER['REMOTE_ADDR'],
+                "user_ip"=>$ip,
                 "login_time"=>date('Y-m-d H:i:s'),
                 "last_time"=>date("Y-m-d H:i:s", strtotime("+".$token_hours." Hours")),
                 "device"=>$_SERVER['HTTP_USER_AGENT']
             ];
+            $title="";
+            $content="";
+            foreach (json_decode($this->def_email['new_ip_login']['title']) as $value) {
+                $title .= "$value - ";
+            }
+            foreach (json_decode($this->def_email['new_ip_login']['content']) as $value) {
+                $content .= $value." <br/><br/><hr/><br/><br/> ";
+            }
+            send_email($data['email'],$title,$content);
+            foreach ($tokens as $value) {
+                if($value->user_ip != $ip){
+                    echo "farklı";
+                }
+            }
             array_push($tokens,$params);
             $data['token']=$tokens;
+            
             $status = $this->base_model->update('users',["token"=>json_encode($tokens)],$users_config);
             $response['data']=$status ? ['token'=>$token]:'not_login';
             $response['status']=$response['data']?"success":"error";
@@ -117,7 +133,6 @@ class Account extends CI_Controller
     }
     public function register()
     {
-        //!SECTION email unique olmalı
         if($this->input->method()=='get'){
             $columns =  json_decode($this->settings['register_columns']);
             $fields=[];

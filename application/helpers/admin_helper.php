@@ -126,7 +126,7 @@ header('Content-Type: application/json');
 
 		return $response['record'];
 	}
-	function ad_delete($lang, $table_name,$filter)
+	function ad_delete($table_name,$filter)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -135,21 +135,15 @@ header('Content-Type: application/json');
 		/*-------------------------------------*/
 
 		
-		//Default filtreler
-		$where = $ci->auths['default_auths'] ?? [];
-		$filters=[];
-		foreach ($where as $k => $val) {
-			$str = strval(explode("=",$val['codes'])[1]);
-			$filters[explode("=",$val['codes'])[0]]=eval("return $str;");	
-		}
-		$ci->lang = $lang;
-		$filters2 = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		$config=(object)[
-			'filters'=>array_merge($filters,$filters2)
+			'filters'=>$filters
 		];
 		$data = ($ci->base_model->show($table_name,$config));
 
-		if(empty($data)) res_error(["message"=>"data_not_found","status"=>"error"]);
+		if(empty($data)) {
+			return (["message"=>"data_not_found","status"=>"error"]);
+		}
 		
 	
 		//silme isteği

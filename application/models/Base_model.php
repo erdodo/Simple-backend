@@ -77,9 +77,10 @@ class Base_model extends CI_Model
     }
     public function add($tableName,$data = array())
     {
+
         return ($this->db->insert($tableName, $data));
 
-        $this->db->close();
+        
     }
     public function update($tableName,$data = array(),$config=[])
     {
@@ -95,6 +96,7 @@ class Base_model extends CI_Model
     }
     public function set_query($query="")
     {
+        
         return $this->db->query($query);
     }
     public function phpmyadmin_query($query)

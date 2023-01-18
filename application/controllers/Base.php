@@ -59,4 +59,9 @@ class Base extends CI_Controller
 		$response= db_delete($table_name,$filter);
 		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
 	}
+	public function enums($table_name,$clm_name)
+	{
+		$response= db_enums($table_name,$clm_name);
+		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+	}
 }

@@ -25,6 +25,9 @@ $route['api/v1/(:any)/create'] = 'Base/create/$1';//tablo adı
 $route['api/v1/(:any)/update/(:any)'] = 'Base/update/$1/$2';// tablo adı, filter
 $route['api/v1/(:any)/edit/(:any)'] = 'Base/edit/$1/$2';// tablo adı, filter
 
+//Enums
+$route['api/v1/(:any)/enums/(:any)'] = 'Base/enums/$1/$2';// tablo adı, filter
+
 //Silme
 $route['api/v1/(:any)/delete/(:any)'] = 'Base/delete/$1/$2';// tablo adı, filter
 
@@ -49,3 +52,4 @@ $route['api/account/change_password'] = 'Account/change_password';
 //Dosya yükleme
 $route['api/v2/file_upload'] = 'BaseV2/file_upload';
 $route['api/v2/file_details'] = 'BaseV2/file_details';
+$route['api/v2/file_delete/(:any)'] = 'BaseV2/file_delete/$1';
