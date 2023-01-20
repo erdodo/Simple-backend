@@ -13,7 +13,7 @@ class Auths extends CI_Controller
         $this->load->model("auths_model");
 		
         if($params['standart'] =='v1'){
-            $token = $this->input->request_headers()['Authorization'] ?? NULL;
+            $token = $this->input->request_headers()['user_token'] ?? NULL;
 			if(empty($token))$token = $this->input->get('token')??NULL;
             if( empty($token)  || strlen($token) != 32)res_error(["message"=>"token_error","status"=>"error"],401);
             

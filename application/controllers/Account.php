@@ -183,7 +183,7 @@ class Account extends CI_Controller
     }
     public function token_control()
     {
-        $token = $this->input->request_headers()['Authorization'] ?? NULL;
+        $token = $this->input->request_headers()['user_token'] ?? NULL;
         if( empty($token)  || strlen($token) != 32){
             res_error(["message"=>"token_error","status"=>"error"],401);
         }

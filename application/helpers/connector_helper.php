@@ -749,7 +749,7 @@ header('Content-Type: application/json');
 		$clm_data = $ci->base_model->show('fields', $lang_support_support_config);
 		$lang_support =  empty($clm_data->lang_support) ? FALSE : $clm_data->lang_support == 1 ;
 		
-		if ($lang_support && !empty($data) && FALSE) {
+		if ($lang_support && !empty($data) ) {
 			$gecici = (array)json_decode($data);
 			return empty($gecici[$ci->lang]) ?
 			 $gecici['tr'] : $gecici[$ci->lang];
