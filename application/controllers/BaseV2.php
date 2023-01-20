@@ -70,6 +70,25 @@ class BaseV2 extends CI_Controller
         dd($response);
         
     }
+    public function file_delete($filter)
+    {
+        $filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
+		foreach (getDBFilters() as $key => $value) {
+			$filters[$key]=$value;
+		}
+		$config=(object)[
+			'filters'=>$filters
+		];
+		$data = ($this->base_model->show("files",$config));
+      
+        ad_delete('files',$filter);
+        unlink(getcwd()."/public/uploads/".$data->file_name);
+        if($data->is_image){
+            unlink(getcwd()."/public/uploads/".$data->mini_name);
+        }
+        dd($data);
+
+    }
     private function formatBytes($size, $precision = 2) { 
         $base = log($size, 1024);
         $suffixes = array('B', 'KB', 'MB', 'GB', 'TB');   

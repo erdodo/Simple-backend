@@ -295,13 +295,16 @@ header('Content-Type: application/json');
 					if(!empty($datas[$key]->$clm_name)){
 						$files = json_decode($datas[$key]->$clm_name);
 						$datas[$key]->$clm_name=[];
-						foreach ($files as $file_key => $yakala) {
-							
-							$datas[$key]->$clm_name[$file_key]=[];
-							$datas[$key]->$clm_name[$file_key]['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
-							$datas[$key]->$clm_name[$file_key]['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
-							$datas[$key]->$clm_name[$file_key]['full'] = empty($yakala->full)?'':   $yakala->full  ;
-							$datas[$key]->$clm_name[$file_key]['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+						if(!empty($files)){
+
+							foreach ($files as $file_key => $yakala) {
+								
+								$datas[$key]->$clm_name[$file_key]=[];
+								$datas[$key]->$clm_name[$file_key]['full_link'] = empty($yakala->full)?'':   base_url().'public/uploads/'.$yakala->full  ;
+								$datas[$key]->$clm_name[$file_key]['mini_link'] = empty($yakala->mini)?'':   base_url().'public/uploads/'.$yakala->mini  ;
+								$datas[$key]->$clm_name[$file_key]['full'] = empty($yakala->full)?'':   $yakala->full  ;
+								$datas[$key]->$clm_name[$file_key]['mini'] = empty($yakala->mini)?'':   $yakala->mini  ;
+							}
 						}
 						
 					}
@@ -544,6 +547,7 @@ header('Content-Type: application/json');
 		$params['updated_at']=date("y-m-d h:i:s");
 		
 		$status = $ci->base_model->add($table_name,$params);
+		
 		$response=[];
 		if($status){
 			$config=(object)[
@@ -596,7 +600,7 @@ header('Content-Type: application/json');
 
 		return $response;
 	}
-	function db_update($lang, $table_name,$filter)
+	function db_update($table_name,$filter)
 	{
 		$ci = get_instance();
 		$ci->load->model('base_model');
@@ -660,6 +664,14 @@ header('Content-Type: application/json');
 					$response['status']="error";
 				}
 			}
+			if($value['type']=='file'){
+				
+				$f = (array)json_decode($params['old_'.$key]??"[]");
+				//dd(json_decode($params['old_'.$key]));
+				$g=array_merge($f, (array)upload_file($key));
+				$updated_data[$key]=json_encode($g);
+				
+			}
 		}
 
 
@@ -679,6 +691,7 @@ header('Content-Type: application/json');
 
 
 		if($response['status']=="error")res_error($response);
+		if($table_name == 'lists')$updated_data = edit_table($updated_data,$filtered_data);
 		
 		//Düzenle
 		$updated_data['user_id']=$ci->user['id'];
@@ -715,13 +728,14 @@ header('Content-Type: application/json');
 		foreach (getDBFilters() as $key => $value) {
 			$filters[$key]=$value;
 		}
+		
 		$config=(object)[
 			'filters'=>$filters
 		];
 		$data = ($ci->base_model->show($table_name,$config));
-
+		
 		if(empty($data))res_error(["message"=>"data_not_found","status"=>"error"]);
-	
+		if($table_name == 'lists')delete_table($data);
 		//silme isteği
 		$config=(object)[
 			'filters'=>["id"=>$data->id]
@@ -751,8 +765,11 @@ header('Content-Type: application/json');
 		
 		if ($lang_support && !empty($data) ) {
 			$gecici = (array)json_decode($data);
-			return empty($gecici[$ci->lang]) ?
-			 $gecici['tr'] : $gecici[$ci->lang];
+			if(empty($gecici)){
+				return $data;
+			}
+			return empty($gecici[$ci->user['language_id']]) ?
+			 $gecici['tr'] : $gecici[$ci->user['language_id']];
 		} else {
 			return $data;
 		}
@@ -817,124 +834,51 @@ header('Content-Type: application/json');
             ];
         }
 	}
-	function create_table($params)
-    {
-		$ci = get_instance();
+	
+	function db_enums($table_name,$clm_name){
+		$ci =& get_instance();
 		$ci->load->model('base_model');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
-        //$ci->get_settings();
-        //Gerekli sql'lerin hazırlanması
-        $db_name=$ci->db->database;
-        $table_name = $params['name'];
-		$table_control = $ci->base_model->phpmyadmin_query("SELECT * FROM `TABLES` WHERE `TABLE_SCHEMA` LIKE '$db_name' AND `TABLE_NAME` LIKE '$table_name'")->num_rows();
-		if($table_control >0) res_error(["message"=>"table_found","status"=>"error"]);
+
+		$table_info = ad_show('lists',"name:".$table_name);
 		
-        $create_table_sql ="CREATE TABLE `$db_name`.`$table_name` ( `id` INT NOT NULL AUTO_INCREMENT , PRIMARY KEY (`id`)) ENGINE = InnoDB;";
-        $ci->base_model->set_query($create_table_sql);
-        
-        $old_field=[];
-        foreach (json_decode($params['fields']) as $value) {
-            $field_config=[
-                'filters'=>['name'=>$value]
-            ];
-            $field_detail = $ci->base_model->show('fields',(object)$field_config);
-            $field_name=$field_detail->name;
-            $field_type = "";
-            $field_required = $field_detail->required?"NOT NULL":"NULL";
-            switch ($field_detail->type) {
-                case 'number':
-                    $field_type="INT";
-                    break;
-                case 'sort_text':
-                    $field_type="VARCHAR(200)";
-                    break;
-                case 'long_text':
-                    $field_type="TEXT";
-                    break;
-                case 'bool':
-                    $field_type="BOOLEAN";
-                    break;
-                case 'file':
-                    $field_type="VARCHAR(500)";
-                    break;
-                case 'image':
-                    $field_type="VARCHAR(500)";
-                    break;
-                case 'phone':
-                    $field_type="VARCHAR(50)";
-                    break;
-                case 'email':
-                    $field_type="VARCHAR(200)";
-                    break;
-                case 'datetime':
-                    $field_type="DATETIME";
-                    break;
-                case 'date':
-                    $field_type="DATE";
-                    break;
-                case 'pass':
-                    $field_type="VARCHAR(200)";
-                    break;
-                case 'array':
-                    $field_type="TEXT";
-                    break;
-                case 'json':
-                    $field_type="TEXT";
-                    break;
-				case 'float':
-					$field_type="FLOAT";
-					break;
-                default:
-                    # code...
-                    break;
-            }
+		if(array_search($clm_name,(array)json_decode($table_info->fields)) == FALSE){
+			$response['message']="field_not_found";
+			$response['status']="error";
+			res_error($response);
+			die();
+		}
 
-            $before_field = empty($old_field)?"id":$old_field;
-			$unique =$field_detail->benzersiz ?", ADD UNIQUE (`$field_name`)":"";
-            
-            $create_field_sql="ALTER TABLE `$table_name` ADD `$field_name` $field_type $field_required AFTER `$before_field` $unique;";   
-            $ci->base_model->set_query($create_field_sql);
-            $old_field = $field_detail->name; 
-        }
-        $old_field;
-        $other_fields_sql="
-            ALTER TABLE `$table_name` 
-                ADD `state` BOOLEAN NOT NULL DEFAULT TRUE AFTER `$old_field`,
-                ADD `companies_id` INT NOT NULL AFTER `state`,
-                ADD `description` VARCHAR(500) NOT NULL AFTER `companies_id`,
-                ADD `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `description`, 
-                ADD `updated_at` DATETIME on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `created_at`, 
-                ADD `own_id` INT NOT NULL AFTER `updated_at`, 
-                ADD `user_id` INT NOT NULL AFTER `own_id`;";
-        $ci->base_model->set_query($other_fields_sql);
-
-        //Ekle
-        $all_fields=json_decode($params['fields']);
-        array_push($all_fields,"id","state","companies_id","description","created_at","updated_at","own_id","user_id");
-        $params['fields'] =json_encode($all_fields);
-
-        $auths_list = ["list","create","edit","show","delete"];
-	
-        foreach ($auths_list as  $value) {
-            $auths_params=[
-                "name"=>$table_name."_".$value,
-                "auths_type"=>$value,
-                "table_name"=>$table_name,
-                "auths_group"=>$ci->user['auths_group'],
-                "state"=>1,
-                "created_at"=>date("y-m-d h:i:s"),
-                "updated_at"=>date("y-m-d h:i:s"),
-                "own_id"=>$ci->user['id'],
-                "user_id"=>$ci->user['id'],
-            ];
-            $status =  $ci->base_model->add('auths',$auths_params);
-			if(!$status) res_error([ "message"=>$table_name."_".$value."_add_error", "status"=>"error" ]);
+		$field = ad_show('fields',"name:".$clm_name);
+		$table_data=[];
+		if(!empty($field->relation_table)){
+			$ad_table_data = ad_list($field->relation_table,$params['page']??1);
+			foreach ($ad_table_data as $key => $value) {
+				$val = (array)$value;
+				$new_val=[];
+				$relation_columns = json_decode($field->relation_columns);
+				foreach ($relation_columns as  $v) {
+					$new_val[$v]=langTranslate($val[$v],$v);
+				}
+				$table_data[$val[$field->relation_id]]=$new_val;
+			}
+			$response['records']=$table_data;
+			$response['type']="table";
+			$response['status']="success";
+		}
+		else if(!empty($field->enums)){
+			$table_data = json_decode($field->enums);
+			$response['records']=$table_data;
+			$response['type']="enums";
+			$response['status']="success";
+		}else{
+			$response['message']="data_not_found";
+			$response['status']="error";
+		}
 		
-        }
-		return $params;
-
 		
-        
-    }
+		
+		return $response;
+	}
