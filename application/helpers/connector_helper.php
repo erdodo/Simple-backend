@@ -205,12 +205,13 @@ header('Content-Type: application/json');
 			
 			foreach ($datas as $key => $v) {
 				$value = (array)$v;
-				/*if ($clm['lang_support'] == 1) {
+				if ($clm['lang_support'] == 1) {
 					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
 					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
-					$lang_record = (array)json_decode($datas[$key]->$clm_name);
-					$datas[$key]->$clm_name = empty($lang_record[]) ? $lang_record['tr'] : $lang_record[];
-				}*/
+					$datas[$key]->$clm_name =langTranslate($value[$clm_name],$clm_name);
+					/*$lang_record = (array)json_decode($datas[$key]->$clm_name);
+					$datas[$key]->$clm_name = empty($lang_record[]) ? $lang_record['tr'] : $lang_record[];*/
+				}
 				if (!empty($clm['relation_table'])) {
 					//NOTE - Eğer kolonun bağlı oldupu bir tablo var ise bu fonksiyon çalışır.
 					if (intval($datas[$key]->$clm_name) > 0) {
@@ -261,7 +262,10 @@ header('Content-Type: application/json');
 							//Eğer ki array değil text ise burası çalışır
 							$val = $datas[$key]->$clm_name;
 							$datas[$key]->$clm_name = [];
-							$gecici4 = (array) $ci->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+							$relation_columns_record_config=(object)[
+								"filters"=>[$clm['relation_id'] => $val]
+							];
+							$gecici4 = (array) $ci->base_model->show($clm['relation_table'], $relation_columns_record_config);
 
 
 							$datas[$key]->$clm_name[$clm['relation_id']] = !empty($gecici4[$clm['relation_id']]) ? $gecici4[$clm['relation_id']] : "";
@@ -269,8 +273,10 @@ header('Content-Type: application/json');
 							$relation_columns = json_decode($clm['relation_columns']);
 							
 							foreach ($relation_columns as $rc_key => $rc_value) {
-
-								$gecici3 = (array) $ci->base_model->show($clm['relation_table'], [$clm['relation_id'] => $val]);
+								$relation_columns_record_config=(object)[
+									"filters"=>[$clm['relation_id'] => $val]
+								];
+								$gecici3 = (array) $ci->base_model->show($clm['relation_table'], $relation_columns_record_config);
 								
 								$datas[$key]->$clm_name[$rc_value] = langTranslate(!empty($gecici3[$rc_value]) ? $gecici3[$rc_value] : "", $rc_value);
 							}
@@ -764,10 +770,13 @@ header('Content-Type: application/json');
 		$lang_support =  empty($clm_data->lang_support) ? FALSE : $clm_data->lang_support == 1 ;
 		
 		if ($lang_support && !empty($data) ) {
+			
 			$gecici = (array)json_decode($data);
+			
 			if(empty($gecici)){
 				return $data;
 			}
+		
 			return empty($gecici[$ci->user['language_id']]) ?
 			 $gecici['tr'] : $gecici[$ci->user['language_id']];
 		} else {
