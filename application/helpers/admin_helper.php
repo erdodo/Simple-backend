@@ -165,7 +165,8 @@ header('Content-Type: application/json');
 		$ci = get_instance();
 		$ci->load->model('base_model');
 
-		$token = $ci->input->request_headers()['user_token'] ?? NULL;
+		$token = $ci->input->request_headers()['token'] ?? NULL;
+		if(empty($token))$token = $ci->input->get('token')??NULL;
 		if( empty($token)  || strlen($token) != 32)res_error(["message"=>"token_error","status"=>"error"],401);
 		
 		$ci->input->user = (array)($ci->base_model->query("SELECT * FROM `users` WHERE `token` LIKE '%$token%'"));

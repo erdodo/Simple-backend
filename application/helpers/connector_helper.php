@@ -80,17 +80,14 @@ header('Content-Type: application/json');
 			"page"=>$page,
 		];
 		$datas = $ci->base_model->list($table_name,$config);
-		if(empty($datas))res_error(["message"=>"data_not_found","status"=>"error"]);
+		//if(empty($datas))res_success(["message"=>"data_not_found","status"=>"success"]);
 
 		$datas = (array)$datas;
 		$all_record_count = $ci->base_model->count($table_name,$config);
 		$page_count = intval(ceil($all_record_count / ($body_limit ?? 50)));
-		$table_info_config=(object)[
-			"filters"=>[
-				"name"=>$table_name
-			]
-		];
-		$table_info = $ci->base_model->show('lists',$table_info_config);
+
+		//Table bilgileri
+		$table_info = db_show('lists','name:'.$table_name)['data'];
 
 		//Tabloya ait kolonlar
 		$fields = get_columns( $table_name);
@@ -180,7 +177,9 @@ header('Content-Type: application/json');
 		
 		$where = empty($where)?[]:$where;
 		$filters=[];
+
 		foreach ($where as $k => $val) {
+			if(empty($val['codes'])) continue;
 			if(empty(key((array)eval($val['codes']))) || 
 				empty(current((array)eval($val['codes'])))) {
 				continue;
@@ -292,9 +291,10 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'datetime') {
 					$datas[$key]->$clm_name = date_format(date_create($datas[$key]->$clm_name),"d/m/y H:i:s");
 				}
-				if ($clm['type'] == 'array' ) {
+				if ($clm['type'] == 'array' || $clm['type'] == 'json' ) {
 					$array_record = empty($datas[$key]->$clm_name)? "[]":$datas[$key]->$clm_name;
-					$datas[$key]->$clm_name = json_decode($array_record) ?? $datas[$key]->$clm_name;
+					if(gettype($array_record) =='array' ){}
+					 else $datas[$key]->$clm_name = json_decode($array_record) ?? $datas[$key]->$clm_name;
 				}
 				if ($clm['type'] == 'file' || $clm['type'] == 'image' ) {
 					$ci->load->helper('url');
@@ -337,6 +337,7 @@ header('Content-Type: application/json');
 				if ($clm['lang_support'] == 1) {
 					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
 					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
+					$data->$clm_name =langTranslate($data->$clm_name,$clm_name);
 					/*$lang_record = (array)json_decode($data->$clm_name);
 					$data->$clm_name = empty($lang_record[$ci->lang]) ? $lang_record['tr'] : $lang_record[$ci->lang];
 					*/
@@ -422,7 +423,7 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'datetime') {
 					$data->$clm_name = date_format(date_create($data->$clm_name),"d/m/y H:i:s");
 				}
-				if ($clm['type'] == 'array' ) {
+				if ($clm['type'] == 'array' ||$clm['type'] == 'json' ) {
 					$array_record = empty($data->$clm_name)? "[]":$data->$clm_name;
 					$data->$clm_name = json_decode($array_record) ?? $data->$clm_name;
 				}
@@ -463,7 +464,7 @@ header('Content-Type: application/json');
 		$fields= get_columns($table_name);
 		//Yetkisine göre kolon gizleme
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
-		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at');
+		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at','companies_id');
 		foreach ($hide_fields as  $clm_name) {
 			unset($fields[$clm_name]);
 		}
@@ -484,7 +485,6 @@ header('Content-Type: application/json');
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
 
-		
 		//ekleme isteği
 		//GET, POST, FORM-DATA, BODY gibi isteklerin tamamını destekler
 		$body = json_decode($ci->input->raw_input_stream) ?? [];
@@ -494,28 +494,32 @@ header('Content-Type: application/json');
 		if(!empty($post))$params = $post;
 		if(!empty($body))$params = $body;
 		if(!empty($get))$params = $get;
-		
+		$params = (array)$params;
 		
 		//Hata basmalar
 		$response=[
 			"error"=>[
-			"required"=>[],
-			"unique"=>[]
+				"required"=>[],
+				"unique"=>[]
 			],
 			"status"=>"success"
 		];
+		
 		//Benzersiz kontrolleri
 		$columns = get_columns($table_name);
+		
 		//Zorunluluk kontrolleri
 		foreach ($columns as $key => $value) {
 			if($value['required'] == 1){
 				if(empty($params[$key])){
+					
 					array_push($response['error']['required'],$key);
 					$response['status']="error";
 				}
 			}
 			if($value['benzersiz'] == 1 && !empty($params[$key])){
 				if(!empty(ad_show($table_name,$key.':'.$params[$key]))){
+					
 					array_push($response['error']['unique'],$key);
 					$error_state=TRUE;
 					$response['status']="error";
@@ -525,35 +529,44 @@ header('Content-Type: application/json');
 				$params[$key]=json_encode(upload_file($key));
 			}
 			if($value['type']=="password" && !empty($params[$key])){
+				
 				$params[$key]=password_hash($params[$key], PASSWORD_DEFAULT);
 			}
 		}
-
-
+		
+		
 		//Olmayan kolon gelirse sil
 		foreach ($params as $key => $value) {
 			if(empty($columns[$key])){
+				
 				unset($params[$key]);
 			}
 		}
+		
 		//Gizlenecek kolonları veritabanına gönderme
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
 		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at');
+		
 		foreach ($hide_fields as  $clm_name) {
 			unset($params[$clm_name]);
+			
 		}
+		
 		if($response['status']=="error")res_error($response);
-
+		
 		if($table_name == 'lists')$params= create_table($params);
+		
 		//Ekle
+		
+
 		$params['companies_id']=$ci->user['companies_id'];
+		
 		$params['own_id']=$ci->user['id'];
 		$params['user_id']=$ci->user['id'];
 		$params['created_at']=date("y-m-d h:i:s");
 		$params['updated_at']=date("y-m-d h:i:s");
 		
 		$status = $ci->base_model->add($table_name,$params);
-		
 		$response=[];
 		if($status){
 			$config=(object)[
@@ -593,7 +606,7 @@ header('Content-Type: application/json');
 		$fields= get_columns( $table_name);
 		//Yetkisine göre kolon gizleme
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
-		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at');
+		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at',"companies_id");
 		foreach ($hide_fields as  $clm_name) {
 			unset($fields[$clm_name]);
 		}

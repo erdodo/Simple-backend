@@ -1,6 +1,8 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+
+
 $route['default_controller'] = 'Account/index';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
@@ -30,6 +32,9 @@ $route['api/v1/(:any)/enums/(:any)'] = 'Base/enums/$1/$2';// tablo adı, filter
 
 //Silme
 $route['api/v1/(:any)/delete/(:any)'] = 'Base/delete/$1/$2';// tablo adı, filter
+
+//Front Cache
+$route['api/v2/front_cache'] = 'BaseV2/front_cache';// tablo adı, filter
 
 //Giriş
 $route['api/account/login'] = 'Account/login';
