@@ -44,10 +44,10 @@ defined('BASEPATH') or exit('No direct script access allowed');
                     $field_type="BOOLEAN";
                     break;
                 case 'file':
-                    $field_type="VARCHAR(500)";
+                    $field_type="TEXT";
                     break;
                 case 'image':
-                    $field_type="VARCHAR(500)";
+                    $field_type="TEXT";
                     break;
                 case 'phone':
                     $field_type="VARCHAR(50)";
@@ -171,10 +171,10 @@ defined('BASEPATH') or exit('No direct script access allowed');
                         $field_type="BOOLEAN";
                         break;
                     case 'file':
-                        $field_type="VARCHAR(500)";
+                        $field_type="TEXT";
                         break;
                     case 'image':
-                        $field_type="VARCHAR(500)";
+                        $field_type="TEXT";
                         break;
                     case 'phone':
                         $field_type="VARCHAR(50)";

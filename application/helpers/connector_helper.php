@@ -218,7 +218,25 @@ header('Content-Type: application/json');
 						$relation_columns = json_decode($clm['relation_columns']);//Hangi kolonlar isteniyor
 						$gecici_id = $datas[$key]->$clm_name;//kayıt değiştirileceği için id bir değişkene atılı
 						$datas[$key]->$clm_name = [];//kayıt yeniden yazılmak üzere silinir
+						$relation_display = json_decode($clm['relation_display'])??[];
+						foreach ($relation_display as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+							$relation_columns_record_config=(object)[
+								"filters"=>["id" => $gecici_id]
+							];
+							$relation_columns_record = 
+								(array) $ci->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+							//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+							if(empty($datas[$key]->$clm_name["show"]))$datas[$key]->$clm_name["show"]="";
+							if(!empty($relation_columns_record[$rc_value])){
+								$datas[$key]->$clm_name["show"] .= 	langTranslate($relation_columns_record[$rc_value],$rc_value);
+							}else{
+								$datas[$key]->$clm_name["show"] .= $rc_value;
+							}
+							
+						}
+
 						foreach ($relation_columns as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+
 							$relation_columns_record_config=(object)[
 								"filters"=>["id" => $gecici_id]
 							];
@@ -233,7 +251,7 @@ header('Content-Type: application/json');
 					} else {
 						//NOTE - Eğer ki kayıtta birden fazla id (yada ikincil anahtar olarak ne seçildiyse ) varsa bu fonksiyon tetiklenir.
 						if (empty($datas[$key]->$clm_name)) continue;
-
+						
 						//Text durumundaki array, uygun hale getirilir ve döngüye alınır.
 						$degerler = json_decode($datas[$key]->$clm_name);
 						if (is_array($degerler) || is_object($degerler)) {
@@ -246,7 +264,23 @@ header('Content-Type: application/json');
 								$relation_ids_record = (array) $ci->base_model->show($clm['relation_table'], $relation_ids_record_config);
 								$datas[$key]->$clm_name[$r_value][$clm['relation_id']] = 
 									!empty($relation_ids_record[$clm['relation_id']]) ? $relation_ids_record[$clm['relation_id']] : "";
-
+								$relation_display = json_decode($clm['relation_display'])??[];
+								
+								foreach ($relation_display as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+									$relation_columns_record_config=(object)[
+										"filters"=>[$clm['relation_id'] => $r_value]
+									];
+									$relation_columns_record = 
+										(array) $ci->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+									//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+									if(empty($datas[$key]->$clm_name[$r_value]["show"]))$datas[$key]->$clm_name[$r_value]["show"]="";
+									if(!empty($relation_columns_record[$rc_value])){
+										$datas[$key]->$clm_name[$r_value]["show"] .= 	langTranslate($relation_columns_record[$rc_value],$rc_value);
+									}else{
+										$datas[$key]->$clm_name[$r_value]["show"] .= $rc_value;
+									}
+									
+								}
 								$relation_columns = json_decode($clm['relation_columns']);
 								foreach ($relation_columns as $rc_key => $rc_value) {
 									$relation_columns_record_config=(object)[
@@ -258,6 +292,7 @@ header('Content-Type: application/json');
 								}
 							}
 						} else {
+							
 							//Eğer ki array değil text ise burası çalışır
 							$val = $datas[$key]->$clm_name;
 							$datas[$key]->$clm_name = [];
@@ -268,7 +303,23 @@ header('Content-Type: application/json');
 
 
 							$datas[$key]->$clm_name[$clm['relation_id']] = !empty($gecici4[$clm['relation_id']]) ? $gecici4[$clm['relation_id']] : "";
-
+							$relation_display = json_decode($clm['relation_display'])??[];
+								
+							foreach ($relation_display as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+								$relation_columns_record_config=(object)[
+									"filters"=>[$clm['relation_id'] => $val]
+								];
+								$relation_columns_record = 
+									(array) $ci->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+								//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+								if(empty($datas[$key]->$clm_name["show"]))$datas[$key]->$clm_name["show"]="";
+								if(!empty($relation_columns_record[$rc_value])){
+									$datas[$key]->$clm_name["show"] .= 	langTranslate($relation_columns_record[$rc_value],$rc_value);
+								}else{
+									$datas[$key]->$clm_name["show"] .= $rc_value;
+								}
+								
+							}
 							$relation_columns = json_decode($clm['relation_columns']);
 							
 							foreach ($relation_columns as $rc_key => $rc_value) {
@@ -300,6 +351,7 @@ header('Content-Type: application/json');
 					$ci->load->helper('url');
 					if(!empty($datas[$key]->$clm_name)){
 						$files = json_decode($datas[$key]->$clm_name);
+						
 						$datas[$key]->$clm_name=[];
 						if(!empty($files)){
 
@@ -343,13 +395,35 @@ header('Content-Type: application/json');
 					*/
 
 				}
+				
 				if (!empty($clm['relation_table'])) {
+					
 					//NOTE - Eğer kolonun bağlı oldupu bir tablo var ise bu fonksiyon çalışır.
+					
 					if (intval($data->$clm_name) > 0) {
-						// Eğerki kayıtta id tutuluyorsa bu fonksiyon çalışır
-						$relation_columns = json_decode($clm['relation_columns']);//Hangi kolonlar isteniyor
 						$gecici_id = $data->$clm_name;//kayıt değiştirileceği için id bir değişkene atılı
 						$data->$clm_name = [];//kayıt yeniden yazılmak üzere silinir
+						$relation_display = json_decode($clm['relation_display'])??[];
+								
+							foreach ($relation_display as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+								$relation_columns_record_config=(object)[
+									"filters"=>["id" => $gecici_id]
+								];
+								$relation_columns_record = 
+								(array) $ci->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+								//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+								if(empty($data->$clm_name["show"]))$data->$clm_name["show"]="";
+								if(!empty($relation_columns_record[$rc_value])){
+									$data->$clm_name["show"] .= 	langTranslate($relation_columns_record[$rc_value],$rc_value);
+								}else{
+									$data->$clm_name["show"] .= $rc_value;
+								}
+								
+							}
+						// Eğerki kayıtta id tutuluyorsa bu fonksiyon çalışır
+						$relation_columns = json_decode($clm['relation_columns']);//Hangi kolonlar isteniyor
+						
+						
 						foreach ($relation_columns as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
 							$relation_columns_record_config=(object)[
 								"filters"=>["id" => $gecici_id]
@@ -365,13 +439,32 @@ header('Content-Type: application/json');
 					} else {
 						//NOTE - Eğer ki kayıtta birden fazla id (yada ikincil anahtar olarak ne seçildiyse ) varsa bu fonksiyon tetiklenir.
 						if (empty($data->$clm_name)) continue;
+						
 
 						//Text durumundaki array, uygun hale getirilir ve döngüye alınır.
 						$degerler = json_decode($data->$clm_name);
 						if (is_array($degerler) || is_object($degerler)) {
 							//Eğer gerçekten array ise burası çalışır
 							$data->$clm_name = [];
+							
 							foreach ($degerler as $r_value) {
+								$relation_display = json_decode($clm['relation_display'])??[];
+								
+							foreach ($relation_display as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+								$relation_columns_record_config=(object)[
+									"filters"=>[$clm['relation_id'] => $r_value]
+								];
+								$relation_columns_record = 
+								(array) $ci->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+								//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+								if(empty($data->$clm_name[$r_value]["show"]))$data->$clm_name[$r_value]["show"]="";
+								if(!empty($relation_columns_record[$rc_value])){
+									$data->$clm_name[$r_value]["show"] .= 	langTranslate($relation_columns_record[$rc_value],$rc_value);
+								}else{
+									$data->$clm_name[$r_value]["show"] .= $rc_value;
+								}
+								
+							}
 								$relation_ids_record_config=(object)[
 									"filters"=>[$clm['relation_id'] => $r_value]
 								];
@@ -400,7 +493,23 @@ header('Content-Type: application/json');
 
 
 							$data->$clm_name[$clm['relation_id']] = !empty($gecici4[$clm['relation_id']]) ? $gecici4[$clm['relation_id']] : "";
-
+							$relation_display = json_decode($clm['relation_display'])??[];
+								
+							foreach ($relation_display as $rc_key => $rc_value) {//istenilen bağlı kolonlar döngüye alınır
+								$relation_columns_record_config=(object)[
+									"filters"=>[$clm['relation_id'] => $val]
+								];
+								$relation_columns_record = 
+								(array) $ci->base_model->show($clm['relation_table'],$relation_columns_record_config );//geçiçi olarak kaydettiğimiz id ile gerçek veriye ulaşılır
+								//kayıt bir objeye dönüştürülerek id ve diğer kolonlar yazılır
+								if(empty($data->$clm_name["show"]))$data->$clm_name["show"]="";
+								if(!empty($relation_columns_record[$rc_value])){
+									$data->$clm_name["show"] .= 	langTranslate($relation_columns_record[$rc_value],$rc_value);
+								}else{
+									$data->$clm_name["show"] .= $rc_value;
+								}
+								
+							}
 							$relation_columns = json_decode($clm['relation_columns']);
 							
 							foreach ($relation_columns as $rc_key => $rc_value) {
@@ -423,14 +532,17 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'datetime') {
 					$data->$clm_name = date_format(date_create($data->$clm_name),"d/m/y H:i:s");
 				}
-				if ($clm['type'] == 'array' ||$clm['type'] == 'json' ) {
+				if ($clm['type'] == 'array' || $clm['type'] == 'json' ) {
 					$array_record = empty($data->$clm_name)? "[]":$data->$clm_name;
-					$data->$clm_name = json_decode($array_record) ?? $data->$clm_name;
+					if(gettype($array_record) =='array' ){}
+					 else $data->$clm_name = json_decode($array_record) ?? $data->$clm_name;
+				
 				}
 				if ($clm['type'] == 'file' || $clm['type'] == 'image' ) {
 					$ci->load->helper('url');
 					if(!empty($data->$clm_name)){
 						$files = json_decode($data->$clm_name);
+						
 						$data->$clm_name=[];
 						foreach ($files as $file_key => $yakala) {
 							
@@ -563,8 +675,8 @@ header('Content-Type: application/json');
 		
 		$params['own_id']=$ci->user['id'];
 		$params['user_id']=$ci->user['id'];
-		$params['created_at']=date("y-m-d h:i:s");
-		$params['updated_at']=date("y-m-d h:i:s");
+		$params['created_at']=date("y-m-d H:i:s");
+		$params['updated_at']=date("y-m-d H:i:s");
 		
 		$status = $ci->base_model->add($table_name,$params);
 		$response=[];
@@ -610,7 +722,7 @@ header('Content-Type: application/json');
 		foreach ($hide_fields as  $clm_name) {
 			unset($fields[$clm_name]);
 		}
-		field_edit_show($fields,$data);
+		//field__show($fields,$data);
 		$response=[
 			"data"=>$data,
 			"fields"=>$fields,
@@ -880,10 +992,26 @@ header('Content-Type: application/json');
 			foreach ($ad_table_data as $key => $value) {
 				$val = (array)$value;
 				$new_val=[];
+				$relation_display = json_decode($field->relation_display)??[];
+								
+				foreach ($relation_display as $v) {//istenilen bağlı kolonlar döngüye alınır
+					
+					
+					if(empty($new_val["show"]))$new_val["show"]="";
+					
+					if(!empty($val[$v])){
+						$new_val["show"] .= langTranslate($val[$v],$v);
+					}else{
+						$new_val["show"] .= $v;
+					}
+					
+				}
 				$relation_columns = json_decode($field->relation_columns);
 				foreach ($relation_columns as  $v) {
 					$new_val[$v]=langTranslate($val[$v],$v);
 				}
+				
+				
 				$table_data[$val[$field->relation_id]]=$new_val;
 			}
 			$response['records']=$table_data;

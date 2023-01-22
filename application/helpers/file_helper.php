@@ -21,13 +21,14 @@ defined('BASEPATH') or exit('No direct script access allowed');
 				
 				$file=[];
 				for ($i = 0; $i < $cpt; $i ++) {
-					
 						
-					if (file_exists($config['upload_path'] . $files[$clm_name]['name'][$i])) {
+					
+					if (file_exists($config['upload_path'] . $files[$clm_name]['name'][$i]) && FALSE) {
 						
 						echo ('File already exists => ' . $config['upload_path'] . $files[$clm_name]['name'][$i]);
 						return;
 					} else {
+						
 						if (!file_exists($config['upload_path'])) {
 							mkdir($config['upload_path'], 0777, true);
 						}
@@ -50,7 +51,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 						
 						if($file[$i]['is_image']){
 							$CI->upload->do_upload($clm_name);
-						$image_data =   $CI->upload->data();
+							$image_data =   $CI->upload->data();
 							$configer =  array(
 								'image_library'   => 'gd2',
 								'source_image'    =>  $image_data['full_path'],
@@ -64,6 +65,8 @@ defined('BASEPATH') or exit('No direct script access allowed');
 								$CI->image_lib->resize();
 								$file[$i]['mini_link'] = base_url().'public/uploads/'. $image_data['file_name'];
 								$file[$i]['mini'] = $image_data['file_name'];
+						}else{
+							$file[$i]['mini'] = "";
 						}
 						
 						$params=[
@@ -82,7 +85,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 			
 			} else {
 
-				return false;
+				return ;
 			}
 		}
     }
