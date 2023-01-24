@@ -56,30 +56,44 @@ class Account extends CI_Controller
                 foreach ($first_step_login_fields as $clm) {
                     $response['data'][$clm]=$data[$clm];
                 }
-
+                $response['status']="success";
+                res_success($response);
             }
-            else $response['data']="user_not_found";
-            $response['status']=$data?"success":"error";
+            else {
+                $response['message']="user_not_found";
+                $response['status']="error";
+                res_error($response);
+            }
+            
         }else if($step_login == 0 && !empty($params['email']) && empty($params['password'])){
             //echo 'Şifre boş';
             $response['data']['required']=["password"];
+            $response['message']="pass_required";
             $response['status']="error";
-        }else if( empty($params['email']) && empty($params['password'])){
+            res_error($response);
+        }else if($step_login == 0 && empty($params['email']) && empty($params['password'])){
             //echo "Eposta ve şifre boş";
             $response['data']['required']=["password","email"];
+            $response['message']="email_and_pass_required";
             $response['status']="error";
+            res_error($response);
         }else if($step_login == 0 && empty($params['email']) && !empty($params['password'])){
             //echo "Eposta boş";
             $response['data']['required']=["email"];
+            $response['message']="email_required";
             $response['status']="error";
-        }else if($step_login == 1 && empty($params['email']) && !empty($params['password'])){
+            res_error($response);
+        }else if($step_login == 1 && empty($params['email'])){
             //echo "Adımlı giriş ama eposta boş";
             $response['data']['required']=["email"];
+            $response['message']="email_required";
             $response['status']="error";
+            res_error($response);
         }else if(!empty($params['email']) && !empty($params['password'])){
             //echo "Direkt giriş";
             $users_config=(object)['filters'=>['email'=>$params['email']]];
             $data = (array)$this->base_model->show('users',$users_config);
+            if(empty($data))res_error(['status'=> 'error','message'=>'user_not_found']);
             $verify = password_verify($params['password'], $data['password']);
             if($verify){
                 foreach ($first_step_login_fields as $clm) {
@@ -151,7 +165,7 @@ class Account extends CI_Controller
             if(!empty($post))$params = $post;
             if(!empty($body))$params = $body;
             
-            if(empty($params["captcha"]) || md5($params["captcha"]) != $_SESSION['captcha_control']){
+            if(empty($params["captcha"]) || empty($_SESSION['captcha_control']) ||  md5($params["captcha"]) != $_SESSION['captcha_control']){
                 res_error(['message'=>"captcha_error","status"=>"error"]);
             }
             

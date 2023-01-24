@@ -120,6 +120,15 @@ defined('BASEPATH') or exit('No direct script access allowed');
 			if(!$status) res_error([ "message"=>$table_name."_".$value."_add_error", "status"=>"error" ]);
 		
         }
+        $table_group = json_decode(ad_show('table_group',6)->table_group_tables);
+        array_push($table_group,$table_name);
+        $tg_prm=[
+            "table_group_tables"=> json_encode($table_group)
+        ];
+        $tg_config=[
+            "filters"=>["id"=>6]
+        ];
+        $ci->base_model->update('table_group',$tg_prm,(object)$tg_config);
 		return $params;
 
 		
@@ -245,17 +254,28 @@ defined('BASEPATH') or exit('No direct script access allowed');
         $config=(object)[
             "filters"=> ["table_name"=>$table_name ]
         ];
+        //yetkilerden sil
         $auths_list = $ci->base_model->list('auths',$config);
         if(!empty($auths_list)){
             foreach ($auths_list as $key => $value) {
                 ad_delete('auths',$value->id);
             }
         }
-        //yetkilerden sil
-        $sql="DROP TABLE `$db_name`.`$table_name`";
-        
-        $ci->base_model->set_query($sql);
+
         //veritabanından sil
+        $sql="DROP TABLE `$db_name`.`$table_name`";
+        $ci->base_model->set_query($sql);
+
+        //tablo groupdan sil
+        $table_group = (array)json_decode(ad_show('table_group',6)->table_group_tables);
+        array_splice($table_group,array_search($table_name,$table_group),1);
+        $tg_prm=[
+            "table_group_tables"=> json_encode($table_group)
+        ];
+        $tg_config=[
+            "filters"=>["id"=>6]
+        ];
+        $ci->base_model->update('table_group',$tg_prm,(object)$tg_config);
         
     }
     function add_column()

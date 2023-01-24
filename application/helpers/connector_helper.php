@@ -47,26 +47,27 @@ header('Content-Type: application/json');
 		$limit=$body_limit??50;
 
 		//Sıralama bölümü
-		$body_sorts = json_decode($params["sorts"]??"[]") ?? NULL;//["name=auth"];
+		$body_sorts = $params["sorts"] ?? NULL;//["name=auth"];
 		$sorts=[];
-		foreach ($body_sorts??[] as $value) {
-			$sorts[explode('=',$value)[0]]=explode('=',$value)[1] == "true"?"ASC":"DESC";
+		foreach ($body_sorts??[] as $key => $value) {
+			$sorts[$key]=$value == true ?"ASC":"DESC";
 		}
 		
 		//Sorgulama(like) bölümü
-		$body_like = json_decode($params["like"]??"[]") ?? NULL;//["name=auth"];
+		$body_like = $params["like"] ?? NULL;//["name=auth"];
 		$likes=[];
-		foreach ($body_like??[] as $value) {
-			$likes[explode('=',$value)[0]]=explode('=',$value)[1];
+		foreach ($body_like??[] as $key => $value) {
+			$likes[$key]=$value;
 		}
 
 		//Filtreleme bölümü
-		$body_filters =json_decode($params["filters"]??"[]");// ["name=lists"];
+		$body_filters =$params["filters"] ?? NULL;// ["name=lists"];
 		$filters=[];
-		foreach ($body_filters??[] as $value) {
-			$filters[explode('=',$value)[0]]=explode('=',$value)[1];
+		foreach ($body_filters??[] as $key => $value) {
+			$filters[$key]=$value;
 		}
 		//Default filtreler
+		
 		foreach (getDBFilters() as $key => $value) {
 			$filters[$key]=$value;
 		}
@@ -79,20 +80,22 @@ header('Content-Type: application/json');
 			"limit"=>$limit,
 			"page"=>$page,
 		];
+		
 		$datas = $ci->base_model->list($table_name,$config);
-		//if(empty($datas))res_success(["message"=>"data_not_found","status"=>"success"]);
 
+		
 		$datas = (array)$datas;
 		$all_record_count = $ci->base_model->count($table_name,$config);
 		$page_count = intval(ceil($all_record_count / ($body_limit ?? 50)));
-
+		
 		//Table bilgileri
 		$table_info = db_show('lists','name:'.$table_name)['data'];
-
+		
 		//Tabloya ait kolonlar
 		$fields = get_columns( $table_name);
 		//$enums = $ci->getEnums($fields);
-
+		
+		if(empty($datas))res_success(["fields"=> $fields,"message"=>"data_not_found","status"=>"success"]);
 
 		//Yetkisine göre kolon gizleme
 		foreach ($hide_fields as  $clm_name) {
@@ -130,11 +133,6 @@ header('Content-Type: application/json');
 		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
 		
 		//Default filtreler
-		
-		
-		
-
-		
 		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		foreach (getDBFilters() as $key => $value) {
 			$filters[$key]=$value;
@@ -170,6 +168,7 @@ header('Content-Type: application/json');
 	{
 		$ci =& get_instance();
 		$ci->load->model('base_model');
+		get_user();
 		$user = (array)$ci->input->user;
 		$auths = (array)$ci->input->auths;
 		/*-------------------------------*/
@@ -177,7 +176,8 @@ header('Content-Type: application/json');
 		
 		$where = empty($where)?[]:$where;
 		$filters=[];
-
+		if(gettype($where) == gettype(""))$where = json_decode($where);
+		//TODO
 		foreach ($where as $k => $val) {
 			if(empty($val['codes'])) continue;
 			if(empty(key((array)eval($val['codes']))) || 

@@ -101,12 +101,22 @@ class BaseV2 extends CI_Controller
     {
         $lists=['language'];
         $shows=[
-            "auths_group"=>$this->auths_group['id']
+            "auths_group"=>$this->user['auths_group']
         ];
         $response=[];
         $response['time']=floor(microtime(true) * 1000)+intval($this->settings['front_cache_time']);
         $response['profile']=db_show('users','id:'.$this->user['id'])['data'];
+        $auths_config = (object)[
+            "filters"=>[
+                "auths_type" => "list",
+                "table_name"=>"auths",
+                "auths_group"=>$this->auths_group['id']
+            ],
+        ];
+        $this->input->auths = (array) $this->base_model->show('auths',$auths_config);
+        
         $response['auths']=db_list('auths')['records'];
+
         $response['front_langs']=db_list('front_langs')['records'];
         $response['table_group']=db_list('table_group')['records'];
         foreach ($lists as $value) {
