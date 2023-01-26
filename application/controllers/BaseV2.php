@@ -106,19 +106,9 @@ class BaseV2 extends CI_Controller
         $response=[];
         $response['time']=floor(microtime(true) * 1000)+intval($this->settings['front_cache_time']);
         $response['profile']=db_show('users','id:'.$this->user['id'])['data'];
-        $auths_config = (object)[
-            "filters"=>[
-                "auths_type" => "list",
-                "table_name"=>"auths",
-                "auths_group"=>$this->auths_group['id']
-            ],
-        ];
-        $this->input->auths = (array) $this->base_model->show('auths',$auths_config);
-        
         $response['auths']=db_list('auths')['records'];
-
         $response['front_langs']=db_list('front_langs')['records'];
-        $response['table_group']=db_list('table_group')['records'];
+        $response['table_group']=db_list('table_group')['records'] ?? NULL;
         foreach ($lists as $value) {
             if(empty($response['tables']['list']))$response['tables']['list']=[];
             $response['tables']['list'][$value] = db_list($value)['records'];

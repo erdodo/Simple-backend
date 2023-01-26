@@ -25,8 +25,7 @@ class Base_model extends CI_Model
         }
         
 
-        return $this->db
-            ->get($tableName)->row();
+        return $this->db->get($tableName)->row();
     }
     
     public function list($tableName,object $config)

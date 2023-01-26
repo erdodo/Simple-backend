@@ -38,6 +38,7 @@ $route['api/v2/front_cache'] = 'BaseV2/front_cache';// tablo adı, filter
 
 //Giriş
 $route['api/account/login'] = 'Account/login';
+$route['api/account/logout'] = 'Account/logout';
 
 //Üye ol
 $route['api/account/register'] = 'Account/register';

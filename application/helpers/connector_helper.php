@@ -23,9 +23,6 @@ header('Content-Type: application/json');
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
 		
-		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
-		
-		
 
 		//Hangi dil kullanılıyor
 		
@@ -68,7 +65,7 @@ header('Content-Type: application/json');
 		}
 		//Default filtreler
 		
-		foreach (getDBFilters() as $key => $value) {
+		foreach (getDBFilters($table_name,'list') as $key => $value) {
 			$filters[$key]=$value;
 		}
 
@@ -80,7 +77,6 @@ header('Content-Type: application/json');
 			"limit"=>$limit,
 			"page"=>$page,
 		];
-		
 		$datas = $ci->base_model->list($table_name,$config);
 
 		
@@ -95,10 +91,11 @@ header('Content-Type: application/json');
 		$fields = get_columns( $table_name);
 		//$enums = $ci->getEnums($fields);
 		
-		if(empty($datas))res_success(["fields"=> $fields,"message"=>"data_not_found","status"=>"success"]);
+		if(empty($datas))return (["fields"=> $fields,"message"=>"data_not_found","status"=>"success"]);
 
 		//Yetkisine göre kolon gizleme
-		foreach ($hide_fields as  $clm_name) {
+		
+		foreach (getHideFields($table_name,'list') as  $clm_name) {
 			unset($fields[$clm_name]);
 			foreach ($datas as $key => $value) {
 				unset($datas[$key]->$clm_name);
@@ -130,17 +127,18 @@ header('Content-Type: application/json');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
-		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
+		$hide_fields=getHideFields($table_name,'show');
+		
 		
 		//Default filtreler
 		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
-		foreach (getDBFilters() as $key => $value) {
+		foreach (getDBFilters($table_name,'show') as $key => $value) {
 			$filters[$key]=$value;
 		}
 		$config=(object)[
 			'filters'=>$filters
 		];
-		$data = ($ci->base_model->show($table_name,$config));
+		$data = $ci->base_model->show($table_name,$config);
 		if(empty($data))res_error(["message"=>"data_not_found","status"=>"error"]);
 
 		$fields= get_columns( $table_name);
@@ -164,21 +162,36 @@ header('Content-Type: application/json');
 		return $response;
 	}
 	/*-------------------------------------------------------------------------*/
-	function getDBFilters()
+	function getDBFilters($table_name,$type)
 	{
 		$ci =& get_instance();
 		$ci->load->model('base_model');
 		get_user();
 		$user = (array)$ci->input->user;
-		$auths = (array)$ci->input->auths;
+		$auths_config = (object)[
+			"filters"=>[
+				"auths_type" => $type,
+				"table_name"=>$table_name,
+				"auths_group"=>$user['auths_group']
+			],
+		];
+		$auths = (array) $ci->base_model->show('auths',$auths_config);
+		if(empty($auths)) res_error(["message"=>"auths_not_found","status"=>"error"],401);
 		/*-------------------------------*/
-		$where = $ci->auths['default_auths'] ?? NULL;
+		$where=[];
+		if(!empty($auths['default_auths'])){
+			foreach (json_decode($auths['default_auths']) as  $value) {
+				array_push($where,$ci->base_model->show('default_auths',(object)['filters'=>['id'=>$value]]) ?? NULL);
+			}
+
+		}
+		
 		
 		$where = empty($where)?[]:$where;
 		$filters=[];
-		if(gettype($where) == gettype(""))$where = json_decode($where);
-		//TODO
+		
 		foreach ($where as $k => $val) {
+			$val = (array)$val;
 			if(empty($val['codes'])) continue;
 			if(empty(key((array)eval($val['codes']))) || 
 				empty(current((array)eval($val['codes'])))) {
@@ -189,8 +202,26 @@ header('Content-Type: application/json');
 			$filters[key((array)eval($val['codes']))]=current((array)eval($val['codes']));
 			
 		}
-
 		return $filters;
+	}
+	function getHideFields($table_name,$type)
+	{
+		$ci =& get_instance();
+		$ci->load->model('base_model');
+		get_user();
+		$user = (array)$ci->input->user;
+		$auths_config = (object)[
+			"filters"=>[
+				"auths_type" => $type,
+				"table_name"=>$table_name,
+				"auths_group"=>$user['auths_group']
+			],
+		];
+		$auths = (array) $ci->base_model->show('auths',$auths_config);
+		if(empty($auths)) res_error(["message"=>"auths_not_found","status"=>"error"],401);
+
+		$hide_fields=(array)json_decode($auths['hide_fields']??'[]')??[];
+		return $hide_fields;
 	}
 	//NOTE - Listeleme isteğinde verinin daha düzenli gözükmesi için gerekli ayarlar burada yapılıe
 	function field_list_show($fields,$datas)
@@ -575,7 +606,7 @@ header('Content-Type: application/json');
 		
 		$fields= get_columns($table_name);
 		//Yetkisine göre kolon gizleme
-		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
+		$hide_fields=getHideFields($table_name,'create');
 		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at','companies_id');
 		foreach ($hide_fields as  $clm_name) {
 			unset($fields[$clm_name]);
@@ -656,7 +687,7 @@ header('Content-Type: application/json');
 		}
 		
 		//Gizlenecek kolonları veritabanına gönderme
-		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
+		$hide_fields=getHideFields($table_name,'create');
 		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at');
 		
 		foreach ($hide_fields as  $clm_name) {
@@ -704,7 +735,7 @@ header('Content-Type: application/json');
 
 
 		//Default filtreler
-		foreach (getDBFilters() as $key => $value) {
+		foreach (getDBFilters($table_name,'edit') as $key => $value) {
 			$filters[$key]=$value;
 		}
 		
@@ -717,7 +748,7 @@ header('Content-Type: application/json');
 
 		$fields= get_columns( $table_name);
 		//Yetkisine göre kolon gizleme
-		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
+		$hide_fields=getHideFields($table_name,'edit');
 		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at',"companies_id");
 		foreach ($hide_fields as  $clm_name) {
 			unset($fields[$clm_name]);
@@ -741,7 +772,7 @@ header('Content-Type: application/json');
 		//düzenleme isteği
 		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		//Default filtreler
-		foreach (getDBFilters() as $key => $value) {
+		foreach (getDBFilters($table_name,'edit') as $key => $value) {
 			$filters[$key]=$value;
 		}
 		$config=(object)[
@@ -814,7 +845,7 @@ header('Content-Type: application/json');
 			
 		}
 		//Gizlenecek kolonları veritabanına gönderme
-		$hide_fields=(array)json_decode($ci->auths['hide_fields']??'[]')??[];
+		$hide_fields=getHideFields($table_name,'edit');
 		array_push($hide_fields,'id','own_id','user_id','created_at','updated_at');
 		foreach ($hide_fields as  $clm_name) {
 			unset($params[$clm_name]);
@@ -856,7 +887,7 @@ header('Content-Type: application/json');
 		
 		
 		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
-		foreach (getDBFilters() as $key => $value) {
+		foreach (getDBFilters($table_name,'delete') as $key => $value) {
 			$filters[$key]=$value;
 		}
 		

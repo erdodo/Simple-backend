@@ -20,7 +20,6 @@ class Account extends CI_Controller
         $this->load->view('document');
     }
     public function login()
-
     {
         header('Content-Type: application/json');
         if($this->input->method() == 'get'){
@@ -128,10 +127,10 @@ class Account extends CI_Controller
             foreach (json_decode($this->def_email['new_ip_login']['content']) as $value) {
                 $content .= $value." <br/><br/><hr/><br/><br/> ";
             }
-            send_email($data['email'],$title,$content);
             foreach ($tokens as $value) {
                 if($value->user_ip != $ip){
-                    echo "farklı";
+                    //echo "farklı";
+                    send_email($data['email'],$title,$content);
                 }
             }
             array_push($tokens,$params);
@@ -144,6 +143,24 @@ class Account extends CI_Controller
         }
         $response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
         
+    }
+    public function logout()
+    {
+        get_user();
+        $tokens = json_decode($this->input->user['token']);
+        $token = $this->input->request_headers()['token'] ?? NULL;
+        if(empty($token))$token = $this->input->get('token')??NULL;
+
+        $this_token ;
+        foreach ($tokens as $key => $value) {
+            if($value->token == $token){
+                $this_token = $value;
+                unset($tokens[$key]);
+            }
+        }
+        $status = $this->base_model->update('users',["token"=>json_encode($tokens)],(object)['filters'=>['id'=>$this->input->user['id']]]);
+        if($status)res_success(['messsage'=>'token_removed','status'=>'success']);
+        else res_error(['messsage'=>'token_not_removed','status'=>'error']);
     }
     public function register()
     {
