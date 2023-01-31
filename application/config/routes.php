@@ -59,3 +59,6 @@ $route['api/account/change_password'] = 'Account/change_password';
 $route['api/v2/file_upload'] = 'BaseV2/file_upload';
 $route['api/v2/file_details'] = 'BaseV2/file_details';
 $route['api/v2/file_delete/(:any)'] = 'BaseV2/file_delete/$1';
+
+//Bildirim CRON
+$route['cron/send_notification'] = 'BaseV2/send_notification';

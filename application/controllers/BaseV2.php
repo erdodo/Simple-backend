@@ -119,4 +119,24 @@ class BaseV2 extends CI_Controller
         }
         res_success($response);
     }
+    public function send_notification()
+    {
+        $this->load->model('base_model');
+        //SELECT * FROM `notification` WHERE `notif_time` < '2023-02-01 00:23:19'
+//SELECT * FROM `notification` WHERE `notif_time` < '2023-02-01 00:28:56' AND `state` = 1
+        $res = $this->base_model->set_query("SELECT * FROM `notification` WHERE `notif_time` < '2023-02-01 00:28:56' AND `state` = 1");
+        dd($res);
+        
+
+        /*$url = 'https://push.techulus.com/api/v1/notify/2e4b1d86-ef9a-46dc-bbe9-1f0b85ecd46f?title=asdf&body=asdgfa4w';
+      
+        $curl = curl_init($url);
+        $data = [];
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(''));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $result = curl_exec($curl);
+        curl_close($curl);
+        dd($result);*/
+    }
 }

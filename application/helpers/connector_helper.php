@@ -178,6 +178,7 @@ header('Content-Type: application/json');
 		$auths = (array) $ci->base_model->show('auths',$auths_config);
 		if(empty($auths)) res_error(["message"=>"auths_not_found","status"=>"error"],401);
 		/*-------------------------------*/
+		
 		$where=[];
 		if(!empty($auths['default_auths'])){
 			foreach (json_decode($auths['default_auths']) as  $value) {
@@ -1019,7 +1020,18 @@ header('Content-Type: application/json');
 		$field = ad_show('fields',"name:".$clm_name);
 		$table_data=[];
 		if(!empty($field->relation_table)){
-			$ad_table_data = ad_list($field->relation_table,$params['page']??1);
+			$filters=[];
+			foreach (getDBFilters($table_name,'list') as $key => $value) {
+				$filters[$key]=$value;
+			}        
+			$config=(object)[
+				"filters"=>$filters,
+				"likes"=>[],
+				"sorts"=>[],
+				"limit"=>1000,
+				"page"=>1,
+			];
+			$ad_table_data = $ci->base_model->list($field->relation_table,$config);
 			foreach ($ad_table_data as $key => $value) {
 				$val = (array)$value;
 				$new_val=[];
@@ -1041,7 +1053,7 @@ header('Content-Type: application/json');
 				foreach ($relation_columns as  $v) {
 					$new_val[$v]=langTranslate($val[$v],$v);
 				}
-				
+				$new_val[$field->relation_id] = $val[$field->relation_id];
 				
 				$table_data[$val[$field->relation_id]]=$new_val;
 			}

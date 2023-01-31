@@ -172,7 +172,8 @@ class Auths extends CI_Controller
 				}
 				if ($clm['type'] == 'array' ) {
 					$array_record = empty($data->$clm_name)? "[]":$data->$clm_name;
-					$data->$clm_name = json_decode($array_record) ?? $data->$clm_name;
+					
+					$data->$clm_name = gettype($array_record) == 'object' ||gettype($array_record) ==  'array' ?$data->$clm_name: json_decode($array_record) ;
 				}
 				//TODO 'file','image'
 			
