@@ -56,13 +56,17 @@ header('Content-Type: application/json');
 		foreach ($body_like??[] as $key => $value) {
 			$likes[$key]=$value;
 		}
-
+		
 		//Filtreleme bölümü
-		$body_filters =$params["filters"] ?? NULL;// ["name=lists"];
 		$filters=[];
-		foreach ($body_filters??[] as $key => $value) {
-			$filters[$key]=$value;
+		if(!empty($params["filters"])){
+			$body_filters =gettype($params["filters"]) == 'object'?$params["filters"]:json_decode($params["filters"]);// ["name=lists"];
+			
+			foreach ($body_filters??[] as $key => $value) {
+				$filters[$key]=$value;
+			}
 		}
+		
 		//Default filtreler
 		
 		foreach (getDBFilters($table_name,'list') as $key => $value) {
