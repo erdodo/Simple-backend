@@ -123,20 +123,32 @@ class BaseV2 extends CI_Controller
     {
         $this->load->model('base_model');
         //SELECT * FROM `notification` WHERE `notif_time` < '2023-02-01 00:23:19'
-//SELECT * FROM `notification` WHERE `notif_time` < '2023-02-01 00:28:56' AND `state` = 1
-        $res = $this->base_model->set_query("SELECT * FROM `notification` WHERE `notif_time` < '2023-02-01 00:28:56' AND `state` = 1");
-        dd($res);
+        //SELECT * FROM `notification` WHERE `notif_time` < '2023-02-01 00:28:56' AND `state` = 1
         
+        
+        $res = $this->base_model->set_query("SELECT * FROM `notification` WHERE `notif_time` < '".date("Y-m-d H:i:s")."' AND `state` = 1");
+    
+        if($res->row() == NULL)return;
+        $url2= 'https://push.techulus.com/api/v1/notify/2e4b1d86-ef9a-46dc-bbe9-1f0b85ecd46f?title='.strval($res->row()->notification_title).'&body='.strval($res->row()->notification_content);
+        $url = 'https://api.telegram.org/bot6135972814:AAFYOwdxRSMuL5Nl-XRrb6EnhQLlNk7bHFM/sendMessage?chat_id=@erdo_simple&text='.strval($res->row()->notification_content); 
+    
+        $url=str_replace(' ','%20',$url);
+        if($res){
 
-        /*$url = 'https://push.techulus.com/api/v1/notify/2e4b1d86-ef9a-46dc-bbe9-1f0b85ecd46f?title=asdf&body=asdgfa4w';
-      
-        $curl = curl_init($url);
-        $data = [];
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(''));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        $result = curl_exec($curl);
-        curl_close($curl);
-        dd($result);*/
+    
+            $curl = curl_init($url);
+            $data = [];
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(''));
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            $result = curl_exec($curl);
+            curl_close($curl);
+            //print_r($result);
+            if(json_decode($result)->ok){
+                $up=ad_update('notification','id:'.$res->row()->id , ['state'=>0]);
+                
+            }
+        }
+    
     }
 }

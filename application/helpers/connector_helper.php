@@ -244,8 +244,6 @@ header('Content-Type: application/json');
 					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
 					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
 					$datas[$key]->$clm_name =langTranslate($value[$clm_name],$clm_name);
-					/*$lang_record = (array)json_decode($datas[$key]->$clm_name);
-					$datas[$key]->$clm_name = empty($lang_record[]) ? $lang_record['tr'] : $lang_record[];*/
 				}
 				if (!empty($clm['relation_table'])) {
 					//NOTE - Eğer kolonun bağlı oldupu bir tablo var ise bu fonksiyon çalışır.
@@ -426,9 +424,7 @@ header('Content-Type: application/json');
 					//NOTE - Eğer kolonda dil desteği var ise seçili dile uygun veri döndürme fonksiyonu
 					// Seçili dilde veri yoksa eğer varsayılan olara türkçe döner
 					$data->$clm_name =langTranslate($data->$clm_name,$clm_name);
-					/*$lang_record = (array)json_decode($data->$clm_name);
-					$data->$clm_name = empty($lang_record[$ci->lang]) ? $lang_record['tr'] : $lang_record[$ci->lang];
-					*/
+					
 
 				}
 				
@@ -812,7 +808,11 @@ header('Content-Type: application/json');
 		//Ön güncelleme
 		$updated_data=[];
 		foreach ($filtered_data as $key => $value) {
-			$updated_data[$key]=empty($params[$key])?$value:$params[$key];
+			if(is_null($params[$key]??NULL) ?? FALSE){
+				$updated_data[$key]=$value;
+			}else {
+				$updated_data[$key]=$params[$key];
+			}
 		}
 		
 		
@@ -923,12 +923,27 @@ header('Content-Type: application/json');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
+		$body = (array)json_decode($ci->input->raw_input_stream) ?? [];
+		$post = $ci->input->post() ?? [];
+		$get = $ci->input->get() ?? [];
+		$params=[];
+		if(!empty($post))$params = $post;
+		if(!empty($body))$params = $body;
+		if(!empty($get))$params = $get;
+		/*-------------------------------------*/
 		$lang_support_support_config=(object)[
 			"filters"=>['name' => $column]
 		];
 		
 		$clm_data = $ci->base_model->show('fields', $lang_support_support_config);
 		$lang_support =  empty($clm_data->lang_support) ? FALSE : $clm_data->lang_support == 1 ;
+		
+		$selected_lang='tr';
+		if(!empty($params['lang'])){
+			$selected_lang=$params['lang'];
+		}else if(!empty($ci->user['language_id'])){
+			$selected_lang=ad_show('language',$ci->user['language_id'])->name;
+		}
 		
 		if ($lang_support && !empty($data) ) {
 			
@@ -938,8 +953,7 @@ header('Content-Type: application/json');
 				return $data;
 			}
 		
-			return empty($gecici[$ci->user['language_id']]) ?
-			 $gecici['tr'] : $gecici[$ci->user['language_id']];
+			return empty($gecici[$selected_lang])?$gecici['tr']:$gecici[$selected_lang];
 		} else {
 			return $data;
 		}
@@ -1035,7 +1049,7 @@ header('Content-Type: application/json');
 				"limit"=>1000,
 				"page"=>1,
 			];
-			$ad_table_data = $ci->base_model->list($field->relation_table,$config);
+			$ad_table_data = $ci->base_model->list($field->relation_table,$config)??NULL;
 			foreach ($ad_table_data as $key => $value) {
 				$val = (array)$value;
 				$new_val=[];
