@@ -99,7 +99,13 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
         //Ekle
         $all_fields=json_decode($params['fields']);
-        array_push($all_fields,"id","state","companies_id","description","created_at","updated_at","own_id","user_id");
+
+        $def_field=["id","state","companies_id","description","created_at","updated_at","own_id","user_id"];
+        foreach ($def_field as  $value) {
+            if(!array_search($value,$all_fields)){
+                array_push($all_fields,$value);
+            }
+        }
         $params['fields'] =json_encode($all_fields);
 
         $auths_list = ["list","create","edit","show","delete","enums"];
@@ -152,7 +158,14 @@ defined('BASEPATH') or exit('No direct script access allowed');
         $old_field=[];
 
         $all_fields=json_decode($params['fields']);
-        array_push($all_fields,"id","state","companies_id","description","created_at","updated_at","own_id","user_id");
+        
+        $def_field=["id","state","companies_id","description","created_at","updated_at","own_id","user_id"];
+        foreach ($def_field as  $value) {
+            if(!array_search($value,$all_fields)){
+                array_push($all_fields,$value);
+            }
+        }
+
         $table_columns = json_decode(ad_show('lists',"id:".$table_info->id)->fields);
 
         foreach ($all_fields as $value) {

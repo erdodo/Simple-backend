@@ -8,6 +8,7 @@ header('Content-Type: application/json');
 	$settings=[];
 	$def_email=[];
 
+	
 	//NOTE - Admin için liste
 	function ad_list($table_name,$page=1)
 	{
@@ -82,6 +83,7 @@ header('Content-Type: application/json');
 		$ci->user = (array)$ci->input->user;
 		$ci->auths = (array)$ci->input->auths;
 		/*-------------------------------------*/
+		header('Content-Type: text/html; charset=utf-8		');
 		//düzenleme isteği
 		$filters = (intval($filter) > 0)?["id"=>$filter]:[explode(":",$filter)[0]=>explode(":",$filter)[1]];
 		//Default filtreler
@@ -98,15 +100,20 @@ header('Content-Type: application/json');
 			return $response;
 		die();
 		}
-
+		
 		//Ön güncelleme
 		$updated_data=[];
 		foreach ($filtered_data as $key => $value) {
-			$updated_data[$key]=empty($params[$key])?$value:$params[$key];
+			if(is_null($params[$key]??NULL) ?? FALSE){
+				$updated_data[$key]=$value;
+			}else {
+				$updated_data[$key]=$params[$key];
+			}
+			
 		}
 		
 		
-	
+		
 
 
 		
