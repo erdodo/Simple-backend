@@ -176,7 +176,7 @@ header('Content-Type: application/json');
 			],
 		];
 		$auths = (array) $ci->base_model->show('auths',$auths_config);
-		if(empty($auths)) res_error(["message"=>"auths_not_found","status"=>"error"],401);
+		if(empty($auths)) res_error(["message"=>"auths_not_found","auths_type" => $type,"table_name"=>$table_name,"status"=>"error"],401);
 		/*-------------------------------*/
 		
 		$where=[];
@@ -219,7 +219,7 @@ header('Content-Type: application/json');
 			],
 		];
 		$auths = (array) $ci->base_model->show('auths',$auths_config);
-		if(empty($auths)) res_error(["message"=>"auths_not_found","status"=>"error"],401);
+		if(empty($auths)) res_error(["message"=>"auths_not_found","auths_type" => $type,"table_name"=>$table_name,"status"=>"error"],401);
 
 		$hide_fields=(array)json_decode($auths['hide_fields']??'[]')??[];
 		return $hide_fields;
@@ -656,36 +656,29 @@ header('Content-Type: application/json');
 		foreach ($columns as $key => $value) {
 			if($value['required'] == 1){
 				if(empty($params[$key])){
-					
 					array_push($response['error']['required'],$key);
 					$response['status']="error";
+					$response['message']="required_error";
 				}
 			}
 			if($value['benzersiz'] == 1 && !empty($params[$key])){
 				if(!empty(ad_show($table_name,$key.':'.$params[$key]))){
-					
 					array_push($response['error']['unique'],$key);
 					$error_state=TRUE;
 					$response['status']="error";
+					$response['message']="unique_error";
 				}
 			}
 			if($value['type']=='file'){
 				$params[$key]=json_encode(upload_file($key));
 			}
 			if($value['type']=="password" && !empty($params[$key])){
-				
 				$params[$key]=password_hash($params[$key], PASSWORD_DEFAULT);
 			}
 		}
 		
 		
-		//Olmayan kolon gelirse sil
-		foreach ($params as $key => $value) {
-			if(empty($columns[$key])){
-				
-				unset($params[$key]);
-			}
-		}
+		
 		
 		//Gizlenecek kolonları veritabanına gönderme
 		$hide_fields=getHideFields($table_name,'create');
@@ -695,7 +688,6 @@ header('Content-Type: application/json');
 			unset($params[$clm_name]);
 			
 		}
-		
 		if($response['status']=="error")res_error($response);
 		
 		if($table_name == 'lists')$params= create_table($params);
@@ -707,19 +699,31 @@ header('Content-Type: application/json');
 		
 		$params['own_id']=$ci->user['id'];
 		$params['user_id']=$ci->user['id'];
-		$params['created_at']=date("y-m-d H:i:s");
-		$params['updated_at']=date("y-m-d H:i:s");
+		$params['created_at']=date("Y-m-d H:i:s");
+		$params['updated_at']=date("Y-m-d H:i:s");
+
+		//Olmayan kolon gelirse sil
+		foreach ($params as $key => $value) {
+			if(empty($columns[$key])){
+				unset($params[$key]);
+			}
+		}
 		
 		$status = $ci->base_model->add($table_name,$params);
 		$response=[];
+
 		if($status){
 			$config=(object)[
                 "filters"=>$params,
                 "sorts"=>["id=false"]
             ];
             $response['record'] =  $ci->base_model->show($table_name,$config);
+			$response['status']="success";
+		}else{
+			$response['status']="error";
+			$response['message']=$ci->db->error()['message'];
 		}
-		$response['status']=$status?"success":"error";
+		
 
 		return $response;
 		
@@ -1021,7 +1025,7 @@ header('Content-Type: application/json');
 		$table_data=[];
 		if(!empty($field->relation_table)){
 			$filters=[];
-			foreach (getDBFilters($table_name,'list') as $key => $value) {
+			foreach (getDBFilters($table_name,'enums') as $key => $value) {
 				$filters[$key]=$value;
 			}        
 			$config=(object)[
@@ -1031,7 +1035,9 @@ header('Content-Type: application/json');
 				"limit"=>1000,
 				"page"=>1,
 			];
+			
 			$ad_table_data = $ci->base_model->list($field->relation_table,$config);
+			
 			foreach ($ad_table_data as $key => $value) {
 				$val = (array)$value;
 				$new_val=[];

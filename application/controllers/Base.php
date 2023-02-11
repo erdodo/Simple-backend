@@ -25,43 +25,43 @@ class Base extends CI_Controller
 	{
 		
 		$response= db_list($table_name);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 	public function show($table_name,$filter)
 	{
 		$response= db_show($table_name,$filter);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 	public function create($table_name)
 	{
 		$response= db_create($table_name);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 	public function add($table_name)
 	{
 		$response= db_add($table_name);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 		
 	}
 	public function edit($table_name,$filter)
 	{
 		
 		$response= db_edit($table_name,$filter);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 	public function update($table_name,$filter)
 	{
 		$response= db_update($table_name,$filter);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 	public function delete($table_name,$filter)
 	{
 		$response= db_delete($table_name,$filter);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 	public function enums($table_name,$clm_name)
 	{
 		$response= db_enums($table_name,$clm_name);
-		$response['status'] == 'success'?res_success($response):res_error(["message"=>"error","status"=>"error"]);
+		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 }

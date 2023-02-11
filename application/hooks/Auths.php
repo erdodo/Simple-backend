@@ -47,7 +47,7 @@ class Auths extends CI_Controller
                 ],
             ];
             $auths = (array) $this->auths_model->show('auths',$auths_config);
-			if(empty($auths))res_error(["message"=>"auths_not_found","status"=>"error"],401);
+			if(empty($auths))res_error(["message"=>"auths_not_found","auths_type" => $fun,"table_name"=>$params['table'],"status"=>"error"],401);
 			
 
 			$this->input->auths = $this->detail("tr",'auths',$auths['id']);//db_show('auths',$auths['id']);// 

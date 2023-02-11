@@ -50,9 +50,10 @@ class Base_model extends CI_Model
         
         
 
-        return $this->db
+        $data =  $this->db
             ->limit($limit, $limit * ($page - 1))
-            ->get($tableName)->result();
+            ->get($tableName);
+        if($data) return $data->result();
     }
     public function count($tableName,object $config)
     {
@@ -77,7 +78,8 @@ class Base_model extends CI_Model
     public function add($tableName,$data = array())
     {
 
-        return ($this->db->insert($tableName, $data));
+        $state = $this->db->insert($tableName, $data);
+        return $state; 
 
         
     }
