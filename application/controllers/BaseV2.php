@@ -105,18 +105,49 @@ class BaseV2 extends CI_Controller
         ];
         $response=[];
         $response['time']=floor(microtime(true) * 1000)+intval($this->settings['front_cache_time']);
+        /*----------------------------------------- */
+        $auths=$this->base_model->set_query("SELECT `table_name`,`auths_type` FROM `auths` WHERE `auths_group` = ".$this->user['auths_group'])->result();
+        $response['auths']=[];
+        foreach ($auths as  $value) {
+            if(empty($response['auths'][$value->table_name]))$response['auths'][$value->table_name]=[];
+            array_push($response['auths'][$value->table_name],$value->auths_type);
+        }
+        /*----------------------------------------- */
         $response['profile']=db_show('users','id:'.$this->user['id'])['data'];
-        $response['auths']=db_list('auths')['records'];
-        $response['front_langs']=db_list('front_langs')['records'];
-        $response['table_group']=db_list('table_group')['records'] ?? NULL;
-        foreach ($lists as $value) {
-            if(empty($response['tables']['list']))$response['tables']['list']=[];
-            $response['tables']['list'][$value] = db_list($value)['records'];
+        /*----------------------------------------- */
+        $front_langs=$this->base_model->set_query("SELECT `name`,`display` FROM `front_langs`")->result();
+        $response['front_langs']=[];
+        foreach ($front_langs as $value) {
+            $response['front_langs'][$value->name]=langTranslate($value->display,'display');
+            
         }
-        foreach ($shows as $key=> $value) {
-            if(empty($response['tables']['show']))$response['tables']['show']=[];
-            $response['tables']['show'][$key] = db_show($key,$value)['data'];
+        /*----------------------------------------- */
+        $language=$this->base_model->set_query("SELECT `name`,`display` FROM `language`")->result();
+        $response['language']=[];
+        foreach ($language as $value) {
+            $response['language'][$value->name]=langTranslate($value->display,'display');
+            
         }
+        /*----------------------------------------- */
+        $table_group=$this->base_model->set_query("SELECT `name`,`icon`,`display`,`table_group_tables` FROM `table_group`")->result();
+        $response['table_group']=[];
+        foreach ($table_group as $value) {
+            $table_group_tables= json_decode($value->table_group_tables);
+            $new_table_group_tables=[];
+            foreach ($table_group_tables as $value2) {
+                $table_display_query = "SELECT `display` FROM `lists` WHERE `name` = '$value2'";
+                $table_display = $this->base_model->set_query($table_display_query);
+                
+                $new_table_group_tables[$value2]= $table_display ? langTranslate($table_display->row()->display,'display') : NULL;
+            }
+            $response['table_group'][$value->name]=[
+                "display" => langTranslate($value->display,'display'),
+                "icon"=> $value->icon,
+                "table_group_tables"=> $new_table_group_tables
+            ];
+
+        }
+        //$response['table_group']=db_list('table_group')['records'] ?? NULL;
         res_success($response);
     }
     public function send_notification()

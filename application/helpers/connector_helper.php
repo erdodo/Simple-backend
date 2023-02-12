@@ -370,7 +370,7 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'bool') {
 					$datas[$key]->$clm_name = $datas[$key]->$clm_name == 1;
 				}
-				if ($clm['type'] == 'pass') {
+				if ($clm['type'] == 'password') {
 					$datas[$key]->$clm_name = '*********';
 				}
 				if ($clm['type'] == 'datetime') {
@@ -558,7 +558,7 @@ header('Content-Type: application/json');
 				if ($clm['type'] == 'bool') {
 					$data->$clm_name = $data->$clm_name == 1;
 				}
-				if ($clm['type'] == 'pass') {
+				if ($clm['type'] == 'password') {
 					$data->$clm_name = '*********';
 				}
 				if ($clm['type'] == 'datetime') {
@@ -829,7 +829,13 @@ header('Content-Type: application/json');
 				}
 			}
 			if($value['benzersiz'] == 1 && !empty($params[$key])){
-				if(!empty(ad_show($table_name,$key.':'.$params[$key]))){
+				$unique_config=[
+					"filters"=>[
+						$key => $params[$key],
+						"id != "=> $updated_data['id']
+					]
+				];
+				if($ci->base_model->show($table_name,(object)$unique_config)){
 					array_push($response['error']['unique'],$key);
 					$error_state=TRUE;
 					$response['status']="error";
