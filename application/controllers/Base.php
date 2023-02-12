@@ -23,8 +23,26 @@ class Base extends CI_Controller
 	}
 	public function list($table_name)
 	{
-		
+		$this->benchmark->mark('base_list_basi');
 		$response= db_list($table_name);
+		
+		$response['benchmark']=[
+			'bastan_sona'=>$this->benchmark->elapsed_time('request_time', 'request_time_end'),
+			'field_list_show_oncesi'=>$this->benchmark->elapsed_time('request_time', 'field_list_show'),
+			'getHideFields_oncesi'=>$this->benchmark->elapsed_time('request_time', 'getHideFields'),
+			'get_columns_oncesi'=>$this->benchmark->elapsed_time('request_time', 'get_columns'),
+			'get_columns_list_field_sonrasi'=>$this->benchmark->elapsed_time('request_time', 'get_columns_list_field'),
+			'get_columns_field_setting_sonrasi'=>$this->benchmark->elapsed_time('request_time', 'get_columns_field_setting'),
+			'table_show_oncesi'=>$this->benchmark->elapsed_time('request_time', 'table_show'),
+			'table_count_oncesi'=>$this->benchmark->elapsed_time('request_time', 'table_count'),
+			'getDBFilters_oncesi'=>$this->benchmark->elapsed_time('request_time', 'getDBFilters'),
+			'db_list_oncesi'=>$this->benchmark->elapsed_time('request_time', 'db_list'),
+			'base_list_basi'=>$this->benchmark->elapsed_time('request_time', 'base_list_basi'),
+			'auths_show_basi'=>$this->benchmark->elapsed_time('request_time', 'auths_show_basi'),
+			"auths_detail_basi"=>$this->benchmark->elapsed_time('request_time', 'auths_detail_basi'),
+			"logs_basi"=>$this->benchmark->elapsed_time('request_time', 'logs_basi'),
+
+		];
 		$response['status'] == 'success'?res_success($response):res_error($response);
 	}
 	public function show($table_name,$filter)

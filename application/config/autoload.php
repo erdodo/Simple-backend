@@ -97,7 +97,8 @@ $autoload['helper'] = array(
     "captcha_helper",
     "admin_helper",
     "output_helper",
-    "table_helper"
+    "table_helper",
+    "cache_helper",
 );
 
 /*
