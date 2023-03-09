@@ -4,5 +4,7 @@ Yakında sizlerle...
 
 
 Geliştirme aşamasında 
-Postman: https://documenter.getpostman.com/view/17278905/2s8Z73zX48  
-Document: https://erdoganyesil.notion.site/Document-8b1d47753f8340e9a310389928abbe1e
+- Postman: https://documenter.getpostman.com/view/17278905/2s8Z73zX48  
+
+
+- Document: https://erdoganyesil.notion.site/Document-8b1d47753f8340e9a310389928abbe1e
